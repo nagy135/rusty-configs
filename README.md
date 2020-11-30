@@ -17,6 +17,9 @@ Uses sqlite database with trivial model structure
 ### path
 * string
 * path to location of config
+### data
+* text
+* lines of config
 ### version
 * private key to version
 
