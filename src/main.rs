@@ -1,45 +1,45 @@
 use rusqlite::{params, Connection, Result, NO_PARAMS};
 
-#[derive(Debug)]
-struct Person {
-    id: i32,
-    name: String,
-    data: Option<Vec<u8>>,
-}
+mod entities;
 
 fn main() -> Result<()> {
+    Ok(())
+}
+
+
+#[test]
+fn db_test_config() -> Result<()> {
     // let conn = Connection::open("myfile.db").unwrap();
     let conn = Connection::open_in_memory()?;
 
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS person (
-                  id              INTEGER PRIMARY KEY,
-                  name            TEXT NOT NULL,
-                  data            BLOB
-                  )",
-        NO_PARAMS,
-    )?;
-    let me = Person {
-        id: 0,
-        name: "Viktor".to_string(),
-        data: None,
-    };
-    conn.execute(
-        "INSERT INTO person (name, data) VALUES (?1, ?2)",
-        params![me.name, me.data],
+        &entities::Config::create_table(),
+        NO_PARAMS
     )?;
 
-    let mut stmt = conn.prepare("SELECT id, name, data FROM person")?;
-    let person_iter = stmt.query_map(NO_PARAMS, |row| {
-        Ok(Person {
+    let test_config = entities::Config {
+        id: 1,
+        path: "/tmp/test".to_string(),
+        data: vec!["first line".to_string(), "second line".to_string()],
+    };
+    conn.execute(
+        "INSERT INTO configs (path, data) VALUES (?1, ?2)",
+        params![test_config.path, test_config.data.join("\n")],
+    )?;
+
+    let mut stmt = conn.prepare("SELECT id, path, data FROM configs")?;
+    let mut configs = stmt.query_map(NO_PARAMS, |row| {
+        let data: String = row.get(2)?;
+        Ok(entities::Config {
             id: row.get(0)?,
-            name: row.get(1)?,
-            data: row.get(2)?,
+            path: row.get(1)?,
+            data: data.split('\n').into_iter().map(|x| x.to_string()).collect()
         })
     })?;
 
-    for person in person_iter {
-        println!("Found person {:?}", person.unwrap());
-    }
+    let fetched_config: entities::Config = configs.next().unwrap()?;
+    assert_eq!(1, fetched_config.id);
+    assert_eq!("/tmp/test", fetched_config.path);
+    assert_eq!(vec!["first line".to_string(), "second line".to_string()], fetched_config.data);
     Ok(())
 }
