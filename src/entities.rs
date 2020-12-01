@@ -12,12 +12,17 @@ pub struct Version {
     pub name: String
 }
 
-impl Config {
+pub trait Entity {
+    fn create_table() -> String;
+    fn table_name() -> &'static str;
+}
+
+impl Entity for Config {
     fn table_name() -> &'static str {
         "configs"
     }
 
-    pub fn create_table() -> String {
+    fn create_table() -> String {
         format!(
             "{} {} {}",
             "CREATE TABLE IF NOT EXISTS", Self::table_name() , " (
@@ -29,12 +34,12 @@ impl Config {
     }
 }
 
-impl Version {
+impl Entity for Version {
     fn table_name() -> &'static str {
         "versions"
     }
 
-    pub fn create_table() -> String {
+    fn create_table() -> String {
         format!(
             "{} {} {}",
             "CREATE TABLE IF NOT EXISTS", Self::table_name() , " (
