@@ -12,7 +12,8 @@ fn main() -> Result<()> {
 
 #[test]
 fn config_entity() -> Result<()> {
-    let db = Connection::open_in_memory()?;
+    let db = Connection::open("myfile.db").unwrap();
+    // let db = Connection::open_in_memory()?;
     let test_config = Config {
         id: 1,
         path: "/tmp/test".to_string(),
@@ -22,16 +23,20 @@ fn config_entity() -> Result<()> {
     test_config.create(&db)?;
     let configs: Vec<Config> = test_config.select(&db, "id, path, data", |row| {
         let data: String = row.get(2)?;
+        let lol: i64 = row.get(0)?;
+        println!("hahahahaha{}", data);
         Ok(Config {
-            id: row.get(0)?,
+            id: 1,
+            // path: "/tmp/test".to_string(),
+            // data: vec!["first line".to_string(), "second line".to_string()],
+            // id: row.get(0)?,
             path: row.get(1)?,
             data: data.split('\n').into_iter().map(|x| x.to_string()).collect()
         })
     })?;
-    panic!(configs);
-    // assert_eq!(1, configs[0].id);
-    // assert_eq!("/tmp/test", configs[0].path);
-    // assert_eq!(vec!["first line".to_string(), "second line".to_string()], configs[0].data);
+    assert_eq!(1, configs[0].id);
+    assert_eq!("/tmp/test", configs[0].path);
+    assert_eq!(vec!["first line".to_string(), "second line".to_string()], configs[0].data);
     Ok(())
 
     // let mut stmt = db.prepare("SELECT id, path, data FROM configs")?;
