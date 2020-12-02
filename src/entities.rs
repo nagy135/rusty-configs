@@ -16,10 +16,10 @@ pub struct Version {
 pub trait Entity<'a> {
     fn table_name() -> &'static str;
     fn columns() -> &'static str;
-    fn values(&'a self) -> &'a str;
+    fn values(&self) -> String;
     fn types() -> &'static str;
 
-    fn create(&'a self, db: &'a Connection) -> Result<> {
+    fn create(&self, db: &'a Connection) -> Result<()> {
         db.execute(
             &format!(
                 "{} {} ({}) {} {}",
@@ -60,8 +60,8 @@ impl<'a> Entity<'a> for Config {
         path NOT NULL,
         data NOT NULL"
     }
-    fn values(&'a self) -> &'a str {
-        &format!(
+    fn values(&self) -> String {
+        format!(
             "{}, {}",
             self.path,
             self.data.join("\n")
@@ -81,8 +81,8 @@ impl<'a> Entity<'a> for Version {
         "id PRIMARY KEY,
         name NOT NULL"
     }
-    fn values(&'a self) -> &'a str {
-        &self.name
+    fn values(&self) -> String {
+        self.name.clone()
     }
 
 }
