@@ -1,4 +1,4 @@
-use rusqlite::{params, Connection, Result, NO_PARAMS, Row, MappedRows};
+use rusqlite::{Connection, Result, NO_PARAMS, Row};
 
 #[derive(Debug)]
 pub struct Config {
@@ -15,9 +15,11 @@ pub struct Version {
 
 pub trait Entity<'a> {
     fn table_name() -> &'static str;
-    fn columns() -> &'static str;
-    fn values(&self) -> String;
     fn types() -> &'static str;
+
+    // These two has to have same values
+    fn values(&self) -> String;
+    fn columns() -> &'static str;
 
     fn create(&self, db: &'a Connection) -> Result<()> {
 
@@ -47,6 +49,7 @@ pub trait Entity<'a> {
         )?;
         Ok(())
     }
+
     fn select<F>(&self, db: &'a Connection, query: &str, f: F)
         -> Result<Vec<Self>>
     where
@@ -63,6 +66,7 @@ pub trait Entity<'a> {
             )
         )?;
         let results = stmt.query_map(NO_PARAMS, f)?;
+
         let rows: Vec<Self> = results.into_iter().map(|e| e.unwrap()).collect();
         Ok(rows)
     }
@@ -72,13 +76,13 @@ impl<'a> Entity<'a> for Config {
     fn table_name() -> &'static str {
         "configs"
     }
-    fn columns() -> &'static str {
-        "(path, data)"
-    }
     fn types() -> &'static str {
         "(id PRIMARY KEY,
         path NOT NULL,
         data NOT NULL)"
+    }
+    fn columns() -> &'static str {
+        "(path, data)"
     }
     fn values(&self) -> String {
         format!(
