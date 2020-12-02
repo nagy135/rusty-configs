@@ -1,6 +1,9 @@
+#[allow(unused_imports)]
 use rusqlite::{params, Connection, Result, NO_PARAMS};
 
 mod entities;
+
+#[allow(unused_imports)]
 use entities::{Config, Version, Entity};
 
 fn main() -> Result<()> {
