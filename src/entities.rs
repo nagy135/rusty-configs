@@ -1,3 +1,4 @@
+use rusqlite::{params, Connection, Result, NO_PARAMS};
 
 #[derive(Debug)]
 pub struct Config {
@@ -12,40 +13,76 @@ pub struct Version {
     pub name: String
 }
 
-pub trait Entity {
-    fn create_table() -> String;
+pub trait Entity<'a> {
     fn table_name() -> &'static str;
+    fn columns() -> &'static str;
+    fn values(&'a self) -> &'a str;
+    fn types() -> &'static str;
+
+    fn create(&'a self, db: &'a Connection) -> Result<> {
+        db.execute(
+            &format!(
+                "{} {} ({}) {} {}",
+                "INSERT INTO",
+                Self::table_name(),
+                Self::columns(),
+                "VALUES",
+                Self::values(&self)
+            ),
+            NO_PARAMS
+        )?;
+        Ok(())
+    }
+
+    fn table(&self, db: &'a Connection) -> Result<()> {
+        db.execute(
+            &format!(
+                "{} {} ({})",
+                "CREATE TABLE IF NOT EXISTS",
+                Self::table_name(),
+                Self::types()
+            ),
+            NO_PARAMS
+        )?;
+        Ok(())
+    }
 }
 
-impl Entity for Config {
+impl<'a> Entity<'a> for Config {
     fn table_name() -> &'static str {
         "configs"
     }
-
-    fn create_table() -> String {
-        format!(
-            "{} {} {}",
-            "CREATE TABLE IF NOT EXISTS", Self::table_name() , " (
-                  id              INTEGER PRIMARY KEY,
-                  path            TEXT NOT NULL,
-                  data            TEXT NOT NULL
-                  )"
+    fn columns() -> &'static str {
+        "path, data"
+    }
+    fn types() -> &'static str {
+        "id PRIMARY KEY,
+        path NOT NULL,
+        data NOT NULL"
+    }
+    fn values(&'a self) -> &'a str {
+        &format!(
+            "{}, {}",
+            self.path,
+            self.data.join("\n")
         )
     }
+
 }
 
-impl Entity for Version {
+impl<'a> Entity<'a> for Version {
     fn table_name() -> &'static str {
         "versions"
     }
-
-    fn create_table() -> String {
-        format!(
-            "{} {} {}",
-            "CREATE TABLE IF NOT EXISTS", Self::table_name() , " (
-                  id              INTEGER PRIMARY KEY,
-                  name            TEXT NOT NULL
-                  )"
-        )
+    fn columns() -> &'static str {
+        "name"
     }
+    fn types() -> &'static str {
+        "id PRIMARY KEY,
+        name NOT NULL"
+    }
+    fn values(&'a self) -> &'a str {
+        &self.name
+    }
+
 }
