@@ -16,6 +16,7 @@ fn config_entity() -> Result<()> {
         data: vec!["first line".to_string(), "second line".to_string()],
     };
     test_config.table(&db)?;
+    // test_config.create(&db)?;
     Ok(())
 }
 
