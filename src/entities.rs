@@ -1,16 +1,16 @@
-use rusqlite::{Connection, Result, NO_PARAMS, Row};
+use rusqlite::{Connection, Result, Row, NO_PARAMS};
 
 #[derive(Debug)]
 pub struct Config {
     pub id: i32,
     pub path: String,
-    pub data: Vec<String>
+    pub data: Vec<String>,
 }
 
 #[derive(Debug)]
 pub struct Version {
     pub id: i32,
-    pub name: String
+    pub name: String,
 }
 
 pub trait Entity<'a> {
@@ -22,7 +22,6 @@ pub trait Entity<'a> {
     fn columns() -> &'static str;
 
     fn create(&self, db: &'a Connection) -> Result<()> {
-
         db.execute(
             &format!(
                 "{} {} {} {} ({})",
@@ -32,12 +31,12 @@ pub trait Entity<'a> {
                 "VALUES",
                 Self::values(&self)
             ),
-            NO_PARAMS
+            NO_PARAMS,
         )?;
         Ok(())
     }
 
-    fn table(&self, db: &'a Connection) -> Result<()> {
+    fn table(db: &'a Connection) -> Result<()> {
         db.execute(
             &format!(
                 "{} {} {}",
@@ -45,26 +44,23 @@ pub trait Entity<'a> {
                 Self::table_name(),
                 Self::types()
             ),
-            NO_PARAMS
+            NO_PARAMS,
         )?;
         Ok(())
     }
 
-    fn select<F>(&self, db: &'a Connection, query: &str, f: F)
-        -> Result<Vec<Self>>
+    fn select<F>(db: &'a Connection, query: &str, f: F) -> Result<Vec<Self>>
     where
         F: FnMut(&Row<'_>) -> Result<Self>,
-        Self: Sized
+        Self: Sized,
     {
-        let mut stmt = db.prepare(
-            &format!(
-                "{} {} {} {}",
-                "SELECT",
-                query,
-                "FROM",
-                Self::table_name()
-            )
-        )?;
+        let mut stmt = db.prepare(&format!(
+            "{} {} {} {}",
+            "SELECT",
+            query,
+            "FROM",
+            Self::table_name()
+        ))?;
         let results = stmt.query_map(NO_PARAMS, f)?;
 
         let rows: Vec<Self> = results.into_iter().map(|e| e.unwrap()).collect();
@@ -85,14 +81,8 @@ impl<'a> Entity<'a> for Config {
         "(id, path, data)"
     }
     fn values(&self) -> String {
-        format!(
-            "{}, '{}', '{}'",
-            self.id,
-            self.path,
-            self.data.join("\n")
-        )
+        format!("{}, '{}', '{}'", self.id, self.path, self.data.join("\n"))
     }
-
 }
 
 impl<'a> Entity<'a> for Version {
@@ -107,11 +97,6 @@ impl<'a> Entity<'a> for Version {
         name NOT NULL)"
     }
     fn values(&self) -> String {
-        format!(
-            "{}, '{}'",
-            self.id,
-            self.name
-        )
+        format!("{}, '{}'", self.id, self.name)
     }
-
 }
