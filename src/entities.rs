@@ -82,11 +82,12 @@ impl<'a> Entity<'a> for Config {
         data NOT NULL)"
     }
     fn columns() -> &'static str {
-        "(path, data)"
+        "(id, path, data)"
     }
     fn values(&self) -> String {
         format!(
-            "'{}', '{}'",
+            "{}, '{}', '{}'",
+            self.id,
             self.path,
             self.data.join("\n")
         )
@@ -99,14 +100,18 @@ impl<'a> Entity<'a> for Version {
         "versions"
     }
     fn columns() -> &'static str {
-        "(name)"
+        "(id, name)"
     }
     fn types() -> &'static str {
         "(id PRIMARY KEY,
         name NOT NULL)"
     }
     fn values(&self) -> String {
-        self.name.clone()
+        format!(
+            "{}, '{}'",
+            self.id,
+            self.name
+        )
     }
 
 }
