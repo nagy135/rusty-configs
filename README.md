@@ -1,6 +1,12 @@
 # rusty-configs
 Manages configs across multiple devices using shared sqlite db file.
 
+# seriousness
+This project doesnt try to be anything serious, its just learning project
+trying to build some codebase around rust's sqlite binding.
+During implementation I m trying to build some "entity abstraction", defining
+traits that avoid replicating code on multiple structs.
+
 # features
 * holds global versions (example: 'work', 'home')
 * has commands to store and retrieve configs to/from their locations
