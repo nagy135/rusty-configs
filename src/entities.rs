@@ -24,12 +24,23 @@ pub trait Entity<'a> {
     fn create(&self, db: &'a Connection) -> Result<()> {
         db.execute(
             &format!(
-                "{} {} {} {} ({})",
-                "INSERT INTO",
+                "INSERT INTO {} {} VALUES ({})",
                 Self::table_name(),
                 Self::columns(),
-                "VALUES",
                 Self::values(&self)
+            ),
+            NO_PARAMS,
+        )?;
+        Ok(())
+    }
+    fn update(db: &'a Connection, id: i32, updated_column: &str, new_value: &str) -> Result<()> {
+        db.execute(
+            &format!(
+                "UPDATE {} SET {}='{}' WHERE id={}",
+                Self::table_name(),
+                updated_column,
+                new_value,
+                id
             ),
             NO_PARAMS,
         )?;
@@ -74,14 +85,14 @@ impl<'a> Entity<'a> for Config {
     }
     fn types() -> &'static str {
         "(id PRIMARY KEY,
-        path NOT NULL,
-        data NOT NULL)"
+        path TEXT NOT NULL,
+        data TEXT NOT NULL)"
     }
     fn columns() -> &'static str {
         "(id, path, data)"
     }
     fn values(&self) -> String {
-        format!("{}, '{}', '{}'", self.id, self.path, self.data.join("\n"))
+        format!("{}, '{}', '{}'\n", self.id, self.path, self.data.join("\n"))
     }
 }
 
@@ -94,7 +105,7 @@ impl<'a> Entity<'a> for Version {
     }
     fn types() -> &'static str {
         "(id PRIMARY KEY,
-        name NOT NULL)"
+        name TEXT NOT NULL)"
     }
     fn values(&self) -> String {
         format!("{}, '{}'", self.id, self.name)
