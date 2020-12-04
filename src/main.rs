@@ -1,5 +1,6 @@
 #[allow(unused_imports)]
 use rusqlite::{params, Connection, Result, NO_PARAMS};
+use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 
@@ -11,7 +12,9 @@ use entities::{Config, Entity, Version};
 static DB_IS_FILE: bool = true;
 
 fn main() -> Result<()> {
-    write_files().expect("Writing of files unsuccessful");
+    // write_files().expect("db => file data FAILED");
+    read_files().expect("file data => db FAILED");
+
     Ok(())
 }
 
@@ -22,11 +25,13 @@ fn get_db() -> Connection {
     }
 }
 
+// Writes into files from database
 fn write_files() -> std::io::Result<()> {
     let db = get_db();
     let configs: Vec<Config> = fetch_data(&db).expect("could not fetch data");
-    for config in configs.into_iter() {
-        println!("writing into {}", config.path);
+    println!("db => real file contents:");
+    for config in configs {
+        println!("{}", config.path);
         let mut file = File::create(config.path)?;
         for line in config.data {
             file.write(format!("{}\n", line).as_bytes())?;
@@ -35,8 +40,16 @@ fn write_files() -> std::io::Result<()> {
     Ok(())
 }
 
+// Reads actual file contents and updates their data in database
 fn read_files() -> Result<()> {
     let db = get_db();
+    let configs: Vec<Config> = fetch_data(&db).expect("could not fetch data");
+    println!("Real file data => db:");
+    for config in configs {
+        println!("{}", config.path);
+        let new_data = fs::read_to_string(config.path).expect("could not read file in db");
+        Config::update(&db, config.id, "data", &new_data)?
+    }
     Ok(())
 }
 
