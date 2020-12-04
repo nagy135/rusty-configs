@@ -4,6 +4,9 @@ Manages configs across multiple devices using shared sqlite db file.
 # seriousness
 This project doesnt try to be anything serious, its just learning project
 trying to build some codebase around rust's sqlite binding.
+It honestly doesnt make much sense to store files in database, since folder would do.
+Idea is to have this simple portable sqlite file that holds all the versions and
+will help me to sync configs across devices.
 During implementation I m trying to build some "entity abstraction", defining
 traits that avoid replicating code on multiple structs, trying to get as close
 as possible to writing zero SQL after "entity abstraction" is done. You can think
