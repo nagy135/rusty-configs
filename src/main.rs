@@ -5,8 +5,8 @@ mod lib;
 
 fn main() {
     let matches = App::new("Rusty Configs")
-        .version("1.0")
-        .author("Viktor Nagy <viktor.nagy1995@gmail.com>")
+        .version(clap::crate_version!())
+        .author(clap::crate_authors!())
         .about("Synchronizes configs across devices with sqlite")
         .arg(
             Arg::with_name("command")
