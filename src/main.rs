@@ -10,12 +10,9 @@ fn main() {
         .about("Synchronizes configs across devices with sqlite")
         .arg(
             Arg::with_name("command")
-                .short("c")
-                .long("command")
-                .value_name("COMMAND")
                 .help("Command to run")
-                // .required(true)
-                .takes_value(true),
+                .index(1)
+                .required(true),
         )
         .arg(
             Arg::with_name("v")
