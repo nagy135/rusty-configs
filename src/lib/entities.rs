@@ -1,5 +1,6 @@
 use rusqlite::{Connection, Result, Row, NO_PARAMS};
 
+/// Entity representing config stored in db
 #[derive(Debug)]
 pub struct Config {
     pub id: i32,
@@ -7,6 +8,7 @@ pub struct Config {
     pub data: Vec<String>,
 }
 
+/// Entity representing version of configs
 #[derive(Debug)]
 pub struct Version {
     pub id: i32,
@@ -14,13 +16,18 @@ pub struct Version {
 }
 
 pub trait Entity<'a> {
+    /// name of the table (statically defined)
     fn table_name() -> &'static str;
+    /// types of data fields (statically defined)
     fn types() -> &'static str;
-
-    // These two has to have same values
-    fn values(&self) -> String;
+    /// columns representing fields of entity, for create (statically defined)
     fn columns() -> &'static str;
 
+    /// values during create, has to have the same number of items
+    /// separated by comma as self::columns
+    fn values(&self) -> String;
+
+    /// creates db instance of entity
     fn create(&self, db: &'a Connection) -> Result<()> {
         db.execute(
             &format!(
@@ -33,6 +40,8 @@ pub trait Entity<'a> {
         )?;
         Ok(())
     }
+
+    /// update entity in db
     fn update(db: &'a Connection, id: i32, updated_column: &str, new_value: &str) -> Result<()> {
         db.execute(
             &format!(
@@ -47,6 +56,7 @@ pub trait Entity<'a> {
         Ok(())
     }
 
+    /// creates table in the database according to table_name and data types
     fn table(db: &'a Connection) -> Result<()> {
         db.execute(
             &format!(
@@ -60,6 +70,7 @@ pub trait Entity<'a> {
         Ok(())
     }
 
+    /// fetches fields of entity passed in query and returns Vec<Self>
     fn select<F>(db: &'a Connection, query: &str, f: F) -> Result<Vec<Self>>
     where
         F: FnMut(&Row<'_>) -> Result<Self>,
@@ -79,6 +90,7 @@ pub trait Entity<'a> {
     }
 }
 
+/// implementation of Entity trait for Config
 impl<'a> Entity<'a> for Config {
     fn table_name() -> &'static str {
         "configs"
@@ -96,6 +108,7 @@ impl<'a> Entity<'a> for Config {
     }
 }
 
+/// implementation of Entity trait for Version
 impl<'a> Entity<'a> for Version {
     fn table_name() -> &'static str {
         "versions"

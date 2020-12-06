@@ -1,12 +1,12 @@
 extern crate clap;
-use clap::{App, Arg};
+use clap::{crate_authors, crate_version, App, Arg};
 
 mod lib;
 
 fn main() {
     let matches = App::new("Rusty Configs")
-        .version(clap::crate_version!())
-        .author(clap::crate_authors!())
+        .version(crate_version!())
+        .author(crate_authors!())
         .about("Synchronizes configs across devices with sqlite")
         .arg(
             Arg::with_name("command")

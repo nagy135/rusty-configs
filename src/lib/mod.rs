@@ -1,4 +1,4 @@
-use rusqlite::{params, Connection, Result, NO_PARAMS};
+use rusqlite::{Connection, Result};
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
@@ -10,13 +10,8 @@ use entities::{Config, Entity, Version};
 
 static DB_IS_FILE: bool = true;
 
-// fn main() -> Result<()> {
-//     // write_files().expect("db => file data FAILED");
-//     read_files().expect("file data => db FAILED");
-
-//     Ok(())
-// }
-
+/// returns db connection (either temporary in memory or in file)
+/// determined by bool constant (mostly for development)
 fn get_db() -> Connection {
     match DB_IS_FILE {
         true => Connection::open("rusty-sqlite.db").expect("Could not open db"),
@@ -24,10 +19,11 @@ fn get_db() -> Connection {
     }
 }
 
-// Writes into files from database
+/// db => real files
+/// Writes into files from database
 pub fn write_files() -> std::io::Result<()> {
     let db = get_db();
-    let configs: Vec<Config> = fetch_data(&db).expect("could not fetch data");
+    let configs: Vec<Config> = fetch_configs(&db).expect("could not fetch data");
     println!("db => real file contents:");
     for config in configs {
         println!("{}", config.path);
@@ -39,10 +35,11 @@ pub fn write_files() -> std::io::Result<()> {
     Ok(())
 }
 
-// Reads actual file contents and updates their data in database
+/// real files => db
+/// Reads actual file contents and updates their data in database
 pub fn read_files() -> Result<()> {
     let db = get_db();
-    let configs: Vec<Config> = fetch_data(&db).expect("could not fetch data");
+    let configs: Vec<Config> = fetch_configs(&db).expect("could not fetch data");
     println!("Real file data => db:");
     for config in configs {
         println!("{}", config.path);
@@ -52,7 +49,8 @@ pub fn read_files() -> Result<()> {
     Ok(())
 }
 
-fn fetch_data(db: &Connection) -> Result<Vec<Config>> {
+/// gets all the configs as a Vec<Config>
+fn fetch_configs(db: &Connection) -> Result<Vec<Config>> {
     let configs: Vec<Config> = Config::select(&db, "id, path, data", |row| {
         let data: String = row.get(2)?;
         Ok(Config {
@@ -68,6 +66,7 @@ fn fetch_data(db: &Connection) -> Result<Vec<Config>> {
     Ok(configs)
 }
 
+/// testing config entity, create and fetch
 #[test]
 fn config_entity() -> Result<()> {
     let db = get_db();
@@ -100,6 +99,7 @@ fn config_entity() -> Result<()> {
     Ok(())
 }
 
+/// testing version entity, create and fetch
 #[test]
 fn version_entity() -> Result<()> {
     let db = get_db();
