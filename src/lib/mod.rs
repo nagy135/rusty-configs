@@ -19,9 +19,23 @@ fn get_db() -> Connection {
     }
 }
 
+/// delete config by its id
+pub fn delete_by_id(id: u64) -> std::io::Result<()> {
+    let db = get_db();
+    Config::delete(&db, "id", &id.to_string()).expect("Delete by id failed");
+    Ok(())
+}
+
+/// delete config by its full path
+pub fn delete_by_path(path: &str) -> std::io::Result<()> {
+    let db = get_db();
+    Config::delete(&db, "path", &format!("\"{}\"", path)).expect("Delete by path failed");
+    Ok(())
+}
+
 /// db => real files
 /// Writes into files from database
-pub fn write_files() -> std::io::Result<()> {
+pub fn write_all() -> std::io::Result<()> {
     let db = get_db();
     let configs: Vec<Config> = fetch_configs(&db).expect("could not fetch data");
     println!("db => real file contents:");
@@ -37,7 +51,7 @@ pub fn write_files() -> std::io::Result<()> {
 
 /// real files => db
 /// Reads actual file contents and updates their data in database
-pub fn read_files() -> Result<()> {
+pub fn read_all() -> Result<()> {
     let db = get_db();
     let configs: Vec<Config> = fetch_configs(&db).expect("could not fetch data");
     println!("Real file data => db:");

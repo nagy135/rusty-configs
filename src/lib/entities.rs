@@ -41,6 +41,26 @@ pub trait Entity<'a> {
         Ok(())
     }
 
+    /// delete entity from db
+    fn delete(db: &'a Connection, parameter: &str, value: &str) -> Result<()> {
+        println!(
+            "DELETE FROM {} WHERE {}={}",
+            Self::table_name(),
+            parameter,
+            value
+        );
+        db.execute(
+            &format!(
+                "DELETE FROM {} WHERE {}={}",
+                Self::table_name(),
+                parameter,
+                value
+            ),
+            NO_PARAMS,
+        )?;
+        Ok(())
+    }
+
     /// update entity in db
     fn update(db: &'a Connection, id: i32, updated_column: &str, new_value: &str) -> Result<()> {
         db.execute(
