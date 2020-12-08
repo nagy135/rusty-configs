@@ -3,6 +3,8 @@ use clap::{crate_authors, crate_version, App, Arg};
 
 mod lib;
 
+static COMMANDS: &'static [&str] = &["read", "write", "delete"];
+
 fn main() {
     let matches = App::new("Rusty Configs")
         .version(crate_version!())
@@ -15,6 +17,13 @@ fn main() {
                 .short("p")
                 .takes_value(true)
                 .help("Path of target config"),
+        )
+        .arg(
+            Arg::with_name("name")
+                .long("name")
+                .short("n")
+                .takes_value(true)
+                .help("Name of target config (for path /tmp/test it is -n test)"),
         )
         .arg(
             Arg::with_name("id")
@@ -52,10 +61,15 @@ fn main() {
                 .expect("delete by id failed"),
             None => match matches.value_of("path") {
                 Some(path) => lib::delete_by_path(path).expect("delete by path failed"),
-                None => panic!("You need either -i(--id) or -p(--path) for this command to work"),
+                None => match matches.value_of("name") {
+                    Some(name) => lib::delete_by_name(name).expect("delete by name failed"),
+                    None => {
+                        panic!("You need either -i(--id) or -p(--path) for this command to work")
+                    }
+                },
             },
         },
-        // _ => panic!("Unknown option"),
+        // _ => println!("unknown command, options {:?}", COMMANDS),
         _ => lib::read_all().expect("read failed"),
     }
 }

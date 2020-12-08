@@ -22,14 +22,21 @@ fn get_db() -> Connection {
 /// delete config by its id
 pub fn delete_by_id(id: u64) -> std::io::Result<()> {
     let db = get_db();
-    Config::delete(&db, "id", &id.to_string()).expect("Delete by id failed");
+    Config::delete(&db, "id", &id.to_string(), "=").expect("Delete by id failed");
     Ok(())
 }
 
 /// delete config by its full path
 pub fn delete_by_path(path: &str) -> std::io::Result<()> {
     let db = get_db();
-    Config::delete(&db, "path", &format!("\"{}\"", path)).expect("Delete by path failed");
+    Config::delete(&db, "path", &format!("\"{}\"", path), "=").expect("Delete by path failed");
+    Ok(())
+}
+
+/// delete config by its name (last token separated by slash)
+pub fn delete_by_name(name: &str) -> std::io::Result<()> {
+    let db = get_db();
+    Config::delete(&db, "path", &format!("'%{}'", name), " LIKE ").expect("Delete by name failed");
     Ok(())
 }
 
