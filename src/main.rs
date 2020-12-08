@@ -32,26 +32,17 @@ fn main() {
                 .takes_value(true)
                 .help("Id of target config"),
         )
-        .arg(
-            Arg::with_name("verbosity")
-                .short("v")
-                .multiple(true)
-                .help("Sets the level of verbosity"),
-        )
+        // .arg(
+        //     Arg::with_name("verbosity")
+        //         .short("v")
+        //         .multiple(true)
+        //         .help("Sets the level of verbosity"),
+        // )
         .get_matches();
 
     // Gets a value for config if supplied by user, or defaults to "default.conf"
     let command = matches.value_of("command").unwrap_or("read");
     println!("Value for command: {}", command);
-
-    // Vary the output based on how many times the user used the "verbose" flag
-    // (i.e. 'myprog -v -v -v' or 'myprog -vvv' vs 'myprog -v'
-    match matches.occurrences_of("verbosity") {
-        0 => println!("No verbose info"),
-        1 => println!("Some verbose info"),
-        2 => println!("Tons of verbose info"),
-        3 | _ => println!("Don't be crazy"),
-    }
 
     match command {
         "read" => lib::read_all().expect("read failed"),
@@ -69,7 +60,7 @@ fn main() {
                 },
             },
         },
-        // _ => println!("unknown command, options {:?}", COMMANDS),
-        _ => lib::read_all().expect("read failed"),
+        _ => println!("unknown command!\noptions: {}", COMMANDS.join(", ")),
+        // _ => lib::read_all().expect("read failed"),
     }
 }
