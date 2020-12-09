@@ -19,6 +19,13 @@ fn get_db() -> Connection {
     }
 }
 
+pub fn init_db() -> Result<()> {
+    let db = get_db();
+    Config::table(&db)?;
+    Version::table(&db)?;
+    Ok(())
+}
+
 /// delete config by its id
 pub fn delete_by_id(id: u64) -> std::io::Result<()> {
     let db = get_db();

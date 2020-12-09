@@ -133,7 +133,10 @@ impl<'a> Entity<'a> for Config {
     fn types() -> &'static str {
         "(id PRIMARY KEY,
         path TEXT NOT NULL,
-        data TEXT NOT NULL)"
+        data TEXT NOT NULL,
+        version_id INTEGER NOT NULL,
+        FOREIGN KEY (version_id) REFERENCES versions(id)
+        )"
     }
     fn columns() -> &'static str {
         "(id, path, data)"

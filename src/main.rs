@@ -58,6 +58,10 @@ fn main() {
                 },
             },
         },
+        "init" => {
+            lib::init_db().expect("fail init db");
+            println!("db initialized");
+        }
         "add" => match matches.value_of("path") {
             Some(path) => {
                 lib::add(path).expect("add failed");
