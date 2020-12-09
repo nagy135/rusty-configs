@@ -40,6 +40,25 @@ pub fn delete_by_name(name: &str) -> std::io::Result<()> {
     Ok(())
 }
 
+pub fn add(path: &str) -> std::io::Result<()> {
+    let db = get_db();
+    let file_lines = fs::read_to_string(path).expect("could not read file in db");
+    let new_id: i32 = Config::next_id(&db).expect("could not fetch next id");
+
+    let new_config = Config {
+        id: new_id,
+        path: path.to_string(),
+        data: file_lines
+            .split("\n")
+            .map(|e| e.to_string())
+            .collect::<Vec<String>>(),
+    };
+    new_config
+        .create(&db)
+        .expect("could not create record in db");
+    Ok(())
+}
+
 /// db => real files
 /// Writes into files from database
 pub fn write_all() -> std::io::Result<()> {

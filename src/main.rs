@@ -3,7 +3,7 @@ use clap::{crate_authors, crate_version, App, Arg};
 
 mod lib;
 
-static COMMANDS: &'static [&str] = &["read", "write", "delete"];
+static COMMANDS: &'static [&str] = &["read", "write", "delete", "add"];
 
 fn main() {
     let matches = App::new("Rusty Configs")
@@ -59,6 +59,10 @@ fn main() {
                     }
                 },
             },
+        },
+        "add" => match matches.value_of("path") {
+            Some(path) => lib::add(path).expect("add failed"),
+            None => println!("You need to specify path with -p(--path)"),
         },
         _ => println!("unknown command!\noptions: {}", COMMANDS.join(", ")),
         // _ => lib::read_all().expect("read failed"),

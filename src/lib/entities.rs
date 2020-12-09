@@ -23,6 +23,19 @@ pub trait Entity<'a> {
     /// columns representing fields of entity, for create (statically defined)
     fn columns() -> &'static str;
 
+    fn next_id(db: &'a Connection) -> Result<i32> {
+        let mut stmt = db.prepare(&format!(
+            "SELECT id FROM {} ORDER BY id DESC LIMIT 0, 1",
+            Self::table_name()
+        ))?;
+        let highest_id: i32 = stmt
+            .query_map(NO_PARAMS, |row| row.get(0))?
+            .into_iter()
+            .map(|e| e.unwrap())
+            .nth(0)
+            .expect("coult not fetch from db id");
+        Ok(highest_id + 1)
+    }
     /// values during create, has to have the same number of items
     /// separated by comma as self::columns
     fn values(&self) -> String;
