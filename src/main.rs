@@ -40,9 +40,7 @@ fn main() {
         // )
         .get_matches();
 
-    // Gets a value for config if supplied by user, or defaults to "default.conf"
     let command = matches.value_of("command").unwrap_or("read");
-    println!("Value for command: {}", command);
 
     match command {
         "read" => lib::read_all().expect("read failed"),
@@ -61,7 +59,10 @@ fn main() {
             },
         },
         "add" => match matches.value_of("path") {
-            Some(path) => lib::add(path).expect("add failed"),
+            Some(path) => {
+                lib::add(path).expect("add failed");
+                println!("File added successfully");
+            }
             None => println!("You need to specify path with -p(--path)"),
         },
         _ => println!("unknown command!\noptions: {}", COMMANDS.join(", ")),
