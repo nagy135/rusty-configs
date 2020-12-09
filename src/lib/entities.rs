@@ -4,6 +4,7 @@ use rusqlite::{Connection, Result, Row, NO_PARAMS};
 #[derive(Debug)]
 pub struct Config {
     pub id: i32,
+    pub version_id: i32,
     pub path: String,
     pub data: Vec<String>,
 }
@@ -28,13 +29,15 @@ pub trait Entity<'a> {
             "SELECT id FROM {} ORDER BY id DESC LIMIT 0, 1",
             Self::table_name()
         ))?;
-        let highest_id: i32 = stmt
+        let highest_id: Option<i32> = stmt
             .query_map(NO_PARAMS, |row| row.get(0))?
             .into_iter()
             .map(|e| e.unwrap())
-            .nth(0)
-            .expect("coult not fetch from db id");
-        Ok(highest_id + 1)
+            .nth(0);
+        match highest_id {
+            Some(id) => Ok(id + 1),
+            None => Ok(1),
+        }
     }
     /// values during create, has to have the same number of items
     /// separated by comma as self::columns
@@ -42,6 +45,12 @@ pub trait Entity<'a> {
 
     /// creates db instance of entity
     fn create(&self, db: &'a Connection) -> Result<()> {
+        println!(
+            "INSERT INTO {} {} VALUES ({})",
+            Self::table_name(),
+            Self::columns(),
+            Self::values(&self)
+        );
         db.execute(
             &format!(
                 "INSERT INTO {} {} VALUES ({})",
@@ -139,10 +148,16 @@ impl<'a> Entity<'a> for Config {
         )"
     }
     fn columns() -> &'static str {
-        "(id, path, data)"
+        "(id, path, data, version_id)"
     }
     fn values(&self) -> String {
-        format!("{}, '{}', '{}'\n", self.id, self.path, self.data.join("\n"))
+        format!(
+            "{}, '{}', '{}', {}",
+            self.id,
+            self.path,
+            self.data.join("\n"),
+            self.version_id
+        )
     }
 }
 

@@ -47,13 +47,14 @@ pub fn delete_by_name(name: &str) -> std::io::Result<()> {
     Ok(())
 }
 
-pub fn add(path: &str) -> std::io::Result<()> {
+pub fn add(path: &str, version: &str) -> std::io::Result<()> {
     let db = get_db();
     let file_lines = fs::read_to_string(path).expect("could not read file in db");
     let new_id: i32 = Config::next_id(&db).expect("could not fetch next id");
 
     let new_config = Config {
         id: new_id,
+        version_id: version.parse::<i32>().unwrap(),
         path: path.to_string(),
         data: file_lines
             .split("\n")
@@ -98,11 +99,12 @@ pub fn read_all() -> Result<()> {
 
 /// gets all the configs as a Vec<Config>
 fn fetch_configs(db: &Connection) -> Result<Vec<Config>> {
-    let configs: Vec<Config> = Config::select(&db, "id, path, data", |row| {
-        let data: String = row.get(2)?;
+    let configs: Vec<Config> = Config::select(&db, "id, version_id, path, data", |row| {
+        let data: String = row.get(3)?;
         Ok(Config {
             id: row.get(0)?,
-            path: row.get(1)?,
+            version_id: row.get(1)?,
+            path: row.get(2)?,
             data: data
                 .split('\n')
                 .into_iter()
@@ -121,15 +123,17 @@ fn config_entity() -> Result<()> {
     Config::table(&db)?;
     let test_config = Config {
         id: 1,
+        version_id: 1,
         path: "/tmp/test".to_string(),
         data: vec!["first line".to_string(), "second line".to_string()],
     };
     test_config.create(&db)?;
-    let configs: Vec<Config> = Config::select(&db, "id, path, data", |row| {
-        let data: String = row.get(2)?;
+    let configs: Vec<Config> = Config::select(&db, "id, version_id, path, data", |row| {
+        let data: String = row.get(3)?;
         Ok(Config {
             id: row.get(0)?,
-            path: row.get(1)?,
+            version_id: row.get(1)?,
+            path: row.get(2)?,
             data: data
                 .split('\n')
                 .into_iter()

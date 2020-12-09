@@ -32,12 +32,13 @@ fn main() {
                 .takes_value(true)
                 .help("Id of target config"),
         )
-        // .arg(
-        //     Arg::with_name("verbosity")
-        //         .short("v")
-        //         .multiple(true)
-        //         .help("Sets the level of verbosity"),
-        // )
+        .arg(
+            Arg::with_name("config_version")
+                .short("g")
+                .long("config_version")
+                .takes_value(true)
+                .help("Version of config (name of the system where it is)"),
+        )
         .get_matches();
 
     let command = matches.value_of("command").unwrap_or("read");
@@ -63,10 +64,13 @@ fn main() {
             println!("db initialized");
         }
         "add" => match matches.value_of("path") {
-            Some(path) => {
-                lib::add(path).expect("add failed");
-                println!("File added successfully");
-            }
+            Some(path) => match matches.value_of("config_version") {
+                Some(config_version) => {
+                    lib::add(path, config_version).expect("add failed");
+                    println!("File added successfully");
+                }
+                None => println!("You need to specify version with -g(--config_version)"),
+            },
             None => println!("You need to specify path with -p(--path)"),
         },
         _ => println!("unknown command!\noptions: {}", COMMANDS.join(", ")),
