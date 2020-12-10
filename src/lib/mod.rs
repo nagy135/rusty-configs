@@ -19,6 +19,7 @@ fn get_db() -> Connection {
     }
 }
 
+/// initializes tables of database
 pub fn init_db() -> Result<()> {
     let db = get_db();
     Config::table(&db)?;
@@ -47,6 +48,7 @@ pub fn delete_by_name(name: &str) -> std::io::Result<()> {
     Ok(())
 }
 
+/// adds new config to database
 pub fn add(path: &str, version: &str) -> std::io::Result<()> {
     let db = get_db();
     let file_lines = fs::read_to_string(path).expect("could not read file in db");
