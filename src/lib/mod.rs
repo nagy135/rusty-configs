@@ -121,6 +121,14 @@ fn version_by_id(db: &Connection, id: i32) -> Result<String> {
     Ok(version.name)
 }
 
+fn tree_item(index: usize, total_len: usize, shift_len: usize, item: &str) -> String {
+    let mut tree_branch = "├──";
+    if (index == 0 && total_len == 1) || index == total_len - 1 {
+        tree_branch = "└──";
+    }
+    format!("{}{} {}", " ".repeat(shift_len), tree_branch, item)
+}
+
 /// lists line separated list of configs stored in db
 pub fn list_configs() -> Result<()> {
     let db = get_db();
@@ -141,11 +149,10 @@ pub fn list_configs() -> Result<()> {
             println!("================");
             println!("{}", version_name);
             for (i, config_path) in config_vec.iter().enumerate() {
-                if (i == 0 && config_vec.len() == 1) || (i == config_vec.len() - 1) {
-                    println!("{}└── {}", " ".repeat(version_name.len() + 1), config_path);
-                } else {
-                    println!("{}├── {}", " ".repeat(version_name.len() + 1), config_path);
-                }
+                println!(
+                    "{}",
+                    tree_item(i, config_vec.len(), version_name.len() + 1, config_path)
+                );
             }
         }
     }
