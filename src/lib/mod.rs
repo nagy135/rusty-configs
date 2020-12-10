@@ -1,4 +1,5 @@
 use rusqlite::{Connection, Result};
+use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
@@ -95,6 +96,58 @@ pub fn read_all() -> Result<()> {
         println!("{}", config.path);
         let new_data = fs::read_to_string(config.path).expect("could not read file in db");
         Config::update(&db, config.id, "data", &new_data)?
+    }
+    Ok(())
+}
+
+/// lists line separated list of versions stored in db
+pub fn list_versions() -> Result<()> {
+    println!("listing versions");
+    Ok(())
+}
+
+fn version_by_id(db: &Connection, id: i32) -> Result<String> {
+    let versions: Vec<Version> = Version::select(&db, "id, name", |row| {
+        Ok(Version {
+            id: row.get(0)?,
+            name: row.get(1)?,
+        })
+    })?;
+    let version: Version = versions
+        .into_iter()
+        .filter(|v| v.id == id)
+        .nth(0)
+        .expect("version not found");
+    Ok(version.name)
+}
+
+/// lists line separated list of configs stored in db
+pub fn list_configs() -> Result<()> {
+    let db = get_db();
+    let configs: Vec<Config> = fetch_configs(&db).expect("could not fetch data");
+    if configs.len() == 0 {
+        println!("No configs in db");
+    } else {
+        let mut map: HashMap<String, Vec<String>> = HashMap::new();
+        for config in configs {
+            let version_name = version_by_id(&db, config.version_id)?;
+            if let Some(version_vec) = map.get_mut(&version_name) {
+                version_vec.push(config.path);
+            } else {
+                map.insert(version_name, vec![config.path]);
+            }
+        }
+        for (version_name, config_vec) in map {
+            println!("================");
+            println!("{}", version_name);
+            for (i, config_path) in config_vec.iter().enumerate() {
+                if (i == 0 && config_vec.len() == 1) || (i == config_vec.len() - 1) {
+                    println!("{}└── {}", " ".repeat(version_name.len() + 1), config_path);
+                } else {
+                    println!("{}├── {}", " ".repeat(version_name.len() + 1), config_path);
+                }
+            }
+        }
     }
     Ok(())
 }

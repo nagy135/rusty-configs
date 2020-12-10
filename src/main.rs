@@ -3,14 +3,23 @@ use clap::{crate_authors, crate_version, App, Arg};
 
 mod lib;
 
-static COMMANDS: &'static [&str] = &["read", "write", "delete", "add"];
+static COMMANDS: &'static [&str] = &["read", "write", "delete", "add", "list"];
 
 fn main() {
     let matches = App::new("Rusty Configs")
         .version(crate_version!())
         .author(crate_authors!())
         .about("Synchronizes configs across devices with sqlite")
-        .arg(Arg::with_name("command").help("Command to run").index(1))
+        .arg(
+            Arg::with_name("command")
+                .help(&format!("Command to run. Options: {}", COMMANDS.join(", ")))
+                .index(1),
+        )
+        .arg(
+            Arg::with_name("entity")
+                .help("Specifies target entity of command")
+                .index(2),
+        )
         .arg(
             Arg::with_name("path")
                 .long("path")
@@ -33,9 +42,9 @@ fn main() {
                 .help("Id of target config"),
         )
         .arg(
-            Arg::with_name("config_version")
-                .short("g")
-                .long("config_version")
+            Arg::with_name("config-version")
+                .short("v")
+                .long("config-version")
                 .takes_value(true)
                 .help("Version of config (name of the system where it is)"),
         )
@@ -46,6 +55,13 @@ fn main() {
     match command {
         "read" => lib::read_all().expect("read failed"),
         "write" => lib::write_all().expect("write failed"),
+        "list" => match matches.value_of("entity") {
+            Some("version") => lib::list_versions().expect("listing of versions failed"),
+            Some("config") => lib::list_configs().expect("listing of configs failed"),
+            Some(_) | None => println!(
+                "You need to specify what you wanna list as a second argument (version/config)"
+            ),
+        },
         "delete" => match matches.value_of("id") {
             Some(id) => lib::delete_by_id(id.parse::<u64>().expect("could not parse id"))
                 .expect("delete by id failed"),
@@ -64,12 +80,12 @@ fn main() {
             println!("db initialized");
         }
         "add" => match matches.value_of("path") {
-            Some(path) => match matches.value_of("config_version") {
+            Some(path) => match matches.value_of("config-version") {
                 Some(config_version) => {
                     lib::add(path, config_version).expect("add failed");
                     println!("File added successfully");
                 }
-                None => println!("You need to specify version with -g(--config_version)"),
+                None => println!("You need to specify version with -g(--config-version)"),
             },
             None => println!("You need to specify path with -p(--path)"),
         },
