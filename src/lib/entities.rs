@@ -45,12 +45,6 @@ pub trait Entity<'a> {
 
     /// creates db instance of entity
     fn create(&self, db: &'a Connection) -> Result<()> {
-        println!(
-            "INSERT INTO {} {} VALUES ({})",
-            Self::table_name(),
-            Self::columns(),
-            Self::values(&self)
-        );
         db.execute(
             &format!(
                 "INSERT INTO {} {} VALUES ({})",
