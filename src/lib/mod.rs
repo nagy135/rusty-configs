@@ -52,7 +52,7 @@ pub fn delete_by_name(db: &str, name: &str) -> std::io::Result<()> {
 }
 
 /// adds new config to database
-pub fn add(db: &str, path: &str, version: &str) -> std::io::Result<()> {
+pub fn add_config(db: &str, path: &str, version: &str) -> std::io::Result<()> {
     let db = get_db(db);
     let file_lines = fs::read_to_string(path).expect("could not read file in db");
     let new_id: i32 = Config::next_id(&db).expect("could not fetch next id");
@@ -68,7 +68,22 @@ pub fn add(db: &str, path: &str, version: &str) -> std::io::Result<()> {
     };
     new_config
         .create(&db)
-        .expect("could not create record in db");
+        .expect("could not create config in db");
+    Ok(())
+}
+
+/// adds new version to database
+pub fn add_version(db: &str, name: &str) -> std::io::Result<()> {
+    let db = get_db(db);
+    let new_id: i32 = Version::next_id(&db).expect("could not fetch next id");
+
+    let new_version = Version {
+        id: new_id,
+        name: name.to_string(),
+    };
+    new_version
+        .create(&db)
+        .expect("could not create version in db");
     Ok(())
 }
 
