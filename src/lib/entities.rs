@@ -24,6 +24,24 @@ pub trait Entity<'a> {
     /// columns representing fields of entity, for create (statically defined)
     fn columns() -> &'static str;
 
+    /// return entity instance by its id (general part)
+    fn find(db: &Connection, id: i32) -> Result<Self>
+    where
+        Self: Sized;
+    fn _find<F>(db: &Connection, id: i32, f: F) -> Result<Self>
+    where
+        Self: Sized,
+        F: FnMut(&Row<'_>) -> Result<Self>,
+    {
+        let mut stmt = db.prepare(&format!(
+            "SELECT {} FROM {} WHERE id={}",
+            Self::columns(),
+            Self::table_name(),
+            id
+        ))?;
+        stmt.query_row(NO_PARAMS, f)
+    }
+
     fn next_id(db: &'a Connection) -> Result<i32> {
         let mut stmt = db.prepare(&format!(
             "SELECT id FROM {} ORDER BY id DESC LIMIT 0, 1",
@@ -47,7 +65,7 @@ pub trait Entity<'a> {
     fn create(&self, db: &'a Connection) -> Result<()> {
         db.execute(
             &format!(
-                "INSERT INTO {} {} VALUES ({})",
+                "INSERT INTO {} ({}) VALUES ({})",
                 Self::table_name(),
                 Self::columns(),
                 Self::values(&self)
@@ -142,8 +160,28 @@ impl<'a> Entity<'a> for Config {
         )"
     }
     fn columns() -> &'static str {
-        "(id, path, data, version_id)"
+        "id, path, data, version_id"
     }
+    /// return entity instance by its id
+    fn find(db: &Connection, id: i32) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        Self::_find(db, id, |row| {
+            let data: String = row.get(3)?;
+            Ok(Config {
+                id: row.get(0)?,
+                version_id: row.get(1)?,
+                path: row.get(2)?,
+                data: data
+                    .split('\n')
+                    .into_iter()
+                    .map(|x| x.to_string())
+                    .collect(),
+            })
+        })
+    }
+
     fn values(&self) -> String {
         format!(
             "{}, '{}', '{}', {}",
@@ -161,11 +199,24 @@ impl<'a> Entity<'a> for Version {
         "versions"
     }
     fn columns() -> &'static str {
-        "(id, name)"
+        "id, name"
     }
     fn types() -> &'static str {
         "(id PRIMARY KEY,
         name TEXT NOT NULL)"
+    }
+
+    /// return entity instance by its id
+    fn find(db: &Connection, id: i32) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        Self::_find(db, id, |row| {
+            Ok(Version {
+                id: row.get(0)?,
+                name: row.get(1)?,
+            })
+        })
     }
     fn values(&self) -> String {
         format!("{}, '{}'", self.id, self.name)

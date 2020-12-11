@@ -140,7 +140,7 @@ pub fn list_configs(db: &str) -> Result<()> {
     } else {
         let mut map: HashMap<String, Vec<String>> = HashMap::new();
         for config in configs {
-            let version_name = version_by_id(&db, config.version_id)?;
+            let version_name = Version::find(&db, config.version_id)?.name;
             if let Some(version_vec) = map.get_mut(&version_name) {
                 version_vec.push(config.path);
             } else {
