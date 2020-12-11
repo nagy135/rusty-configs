@@ -158,15 +158,30 @@ fn fetch_configs(db: &Connection) -> Result<Vec<Config>> {
 fn version_entity() -> Result<()> {
     let db = get_db(DEFAULT_DB_LOCATION);
 
+    // setup
     Version::table(&db)?;
     let test_version = Version {
         id: 1,
         name: "home".to_string(),
     };
     test_version.create(&db)?;
+
+    // all
     let versions: Vec<Version> = Version::all(&db)?;
     assert_eq!(1, versions[0].id);
     assert_eq!("home", versions[0].name);
+
+    // find
+    let version: Version = Version::find(&db, 1)?;
+    assert_eq!(1, version.id);
+    assert_eq!("home".to_string(), version.name);
+
+    // update
+    Version::update(&db, version.id, "name", "work")?;
+    let updated_version: Version = Version::find(&db, 1)?;
+    assert_eq!(1, updated_version.id);
+    assert_eq!("work".to_string(), updated_version.name);
+
     Ok(())
 }
 
@@ -175,6 +190,7 @@ fn version_entity() -> Result<()> {
 fn config_entity() -> Result<()> {
     let db = get_db(DEFAULT_DB_LOCATION);
 
+    // setup
     Config::table(&db)?;
     let test_config = Config {
         id: 1,
@@ -183,6 +199,8 @@ fn config_entity() -> Result<()> {
         data: vec!["first line".to_string(), "second line".to_string()],
     };
     test_config.create(&db)?;
+
+    // all
     let configs: Vec<Config> = Config::all(&db)?;
     assert_eq!(1, configs[0].id);
     assert_eq!("/tmp/test", configs[0].path);
@@ -190,5 +208,18 @@ fn config_entity() -> Result<()> {
         vec!["first line".to_string(), "second line".to_string()],
         configs[0].data
     );
+
+    // find
+    let config: Config = Config::find(&db, 1)?;
+    assert_eq!(1, config.id);
+    assert_eq!(1, config.version_id);
+    assert_eq!("/tmp/test".to_string(), config.path);
+
+    // update
+    Config::update(&db, config.id, "path", "/tmp/test2")?;
+    let updated_config: Config = Config::find(&db, 1)?;
+    assert_eq!(1, updated_config.id);
+    assert_eq!("/tmp/test2".to_string(), updated_config.path);
+
     Ok(())
 }
