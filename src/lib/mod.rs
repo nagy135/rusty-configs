@@ -108,21 +108,7 @@ pub fn list_versions(db: &str) -> Result<()> {
     Ok(())
 }
 
-fn version_by_id(db: &Connection, id: i32) -> Result<String> {
-    let versions: Vec<Version> = Version::select(&db, "id, name", |row| {
-        Ok(Version {
-            id: row.get(0)?,
-            name: row.get(1)?,
-        })
-    })?;
-    let version: Version = versions
-        .into_iter()
-        .filter(|v| v.id == id)
-        .nth(0)
-        .expect("version not found");
-    Ok(version.name)
-}
-
+/// prints line of tree list
 fn tree_item(index: usize, total_len: usize, shift_len: usize, item: &str) -> String {
     let mut tree_branch = "├──";
     if (index == 0 && total_len == 1) || index == total_len - 1 {
