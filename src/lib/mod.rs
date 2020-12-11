@@ -104,7 +104,7 @@ pub fn read_all(db: &str) -> Result<()> {
 
 /// lists line separated list of versions stored in db
 pub fn list_versions(db: &str) -> Result<()> {
-    let db = get_db(db);
+    let _db = get_db(db);
     Ok(())
 }
 

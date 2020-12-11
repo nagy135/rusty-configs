@@ -1,4 +1,4 @@
-use rusqlite::{Connection, MappedRows, Result, Row, NO_PARAMS};
+use rusqlite::{Connection, Result, Row, NO_PARAMS};
 
 /// Entity representing config stored in db
 #[derive(Debug)]
