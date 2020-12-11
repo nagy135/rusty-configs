@@ -1,4 +1,4 @@
-use rusqlite::{Connection, Result, Row, NO_PARAMS};
+use rusqlite::{Connection, MappedRows, Result, Row, NO_PARAMS};
 
 /// Entity representing config stored in db
 #[derive(Debug)]
@@ -23,6 +23,20 @@ pub trait Entity<'a> {
     fn types() -> &'static str;
     /// columns representing fields of entity, for create (statically defined)
     fn columns() -> &'static str;
+
+    /// returns vector of all entities
+    fn all(db: &Connection) -> Result<Vec<Self>>
+    where
+        Self: Sized;
+
+    /// returns vector of all entities (general part)
+    fn _all<F>(db: &Connection, f: F) -> Result<Vec<Self>>
+    where
+        Self: Sized,
+        F: FnMut(&Row<'_>) -> Result<Self>,
+    {
+        Self::select(db, Self::columns(), f)
+    }
 
     /// return entity instance by its id (general part)
     fn find(db: &Connection, id: i32) -> Result<Self>
@@ -127,7 +141,7 @@ pub trait Entity<'a> {
     }
 
     /// fetches fields of entity passed in query and returns Vec<Self>
-    fn select<F>(db: &'a Connection, query: &str, f: F) -> Result<Vec<Self>>
+    fn select<F>(db: &Connection, query: &str, f: F) -> Result<Vec<Self>>
     where
         F: FnMut(&Row<'_>) -> Result<Self>,
         Self: Sized,
@@ -162,22 +176,41 @@ impl<'a> Entity<'a> for Config {
     fn columns() -> &'static str {
         "id, path, data, version_id"
     }
+
+    fn all(db: &Connection) -> Result<Vec<Self>>
+    where
+        Self: Sized,
+    {
+        Self::_all(db, |row| {
+            let data: String = row.get(2)?;
+            Ok(Config {
+                id: row.get(0)?,
+                path: row.get(1)?,
+                data: data
+                    .split('\n')
+                    .into_iter()
+                    .map(|x| x.to_string())
+                    .collect(),
+                version_id: row.get(3)?,
+            })
+        })
+    }
     /// return entity instance by its id
     fn find(db: &Connection, id: i32) -> Result<Self>
     where
         Self: Sized,
     {
         Self::_find(db, id, |row| {
-            let data: String = row.get(3)?;
+            let data: String = row.get(2)?;
             Ok(Config {
                 id: row.get(0)?,
-                version_id: row.get(1)?,
-                path: row.get(2)?,
+                path: row.get(1)?,
                 data: data
                     .split('\n')
                     .into_iter()
                     .map(|x| x.to_string())
                     .collect(),
+                version_id: row.get(3)?,
             })
         })
     }
@@ -204,6 +237,18 @@ impl<'a> Entity<'a> for Version {
     fn types() -> &'static str {
         "(id PRIMARY KEY,
         name TEXT NOT NULL)"
+    }
+
+    fn all(db: &Connection) -> Result<Vec<Self>>
+    where
+        Self: Sized,
+    {
+        Self::_all(db, |row| {
+            Ok(Version {
+                id: row.get(0)?,
+                name: row.get(1)?,
+            })
+        })
     }
 
     /// return entity instance by its id

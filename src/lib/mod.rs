@@ -104,7 +104,7 @@ pub fn read_all(db: &str) -> Result<()> {
 
 /// lists line separated list of versions stored in db
 pub fn list_versions(db: &str) -> Result<()> {
-    println!("listing versions");
+    let db = get_db(db);
     Ok(())
 }
 
@@ -149,20 +149,25 @@ pub fn list_configs(db: &str) -> Result<()> {
 
 /// gets all the configs as a Vec<Config>
 fn fetch_configs(db: &Connection) -> Result<Vec<Config>> {
-    let configs: Vec<Config> = Config::select(&db, "id, version_id, path, data", |row| {
-        let data: String = row.get(3)?;
-        Ok(Config {
-            id: row.get(0)?,
-            version_id: row.get(1)?,
-            path: row.get(2)?,
-            data: data
-                .split('\n')
-                .into_iter()
-                .map(|x| x.to_string())
-                .collect(),
-        })
-    })?;
+    let configs: Vec<Config> = Config::all(&db)?;
     Ok(configs)
+}
+
+/// testing version entity, create and fetch
+#[test]
+fn version_entity() -> Result<()> {
+    let db = get_db(DEFAULT_DB_LOCATION);
+
+    Version::table(&db)?;
+    let test_version = Version {
+        id: 1,
+        name: "home".to_string(),
+    };
+    test_version.create(&db)?;
+    let versions: Vec<Version> = Version::all(&db)?;
+    assert_eq!(1, versions[0].id);
+    assert_eq!("home", versions[0].name);
+    Ok(())
 }
 
 /// testing config entity, create and fetch
@@ -178,46 +183,12 @@ fn config_entity() -> Result<()> {
         data: vec!["first line".to_string(), "second line".to_string()],
     };
     test_config.create(&db)?;
-    let configs: Vec<Config> = Config::select(&db, "id, version_id, path, data", |row| {
-        let data: String = row.get(3)?;
-        Ok(Config {
-            id: row.get(0)?,
-            version_id: row.get(1)?,
-            path: row.get(2)?,
-            data: data
-                .split('\n')
-                .into_iter()
-                .map(|x| x.to_string())
-                .collect(),
-        })
-    })?;
+    let configs: Vec<Config> = Config::all(&db)?;
     assert_eq!(1, configs[0].id);
     assert_eq!("/tmp/test", configs[0].path);
     assert_eq!(
         vec!["first line".to_string(), "second line".to_string()],
         configs[0].data
     );
-    Ok(())
-}
-
-/// testing version entity, create and fetch
-#[test]
-fn version_entity() -> Result<()> {
-    let db = get_db(DEFAULT_DB_LOCATION);
-
-    Version::table(&db)?;
-    let test_version = Version {
-        id: 1,
-        name: "home".to_string(),
-    };
-    test_version.create(&db)?;
-    let versions: Vec<Version> = Version::select(&db, "id, name", |row| {
-        Ok(Version {
-            id: row.get(0)?,
-            name: row.get(1)?,
-        })
-    })?;
-    assert_eq!(1, versions[0].id);
-    assert_eq!("home", versions[0].name);
     Ok(())
 }
