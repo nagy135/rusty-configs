@@ -9,49 +9,51 @@ pub mod entities;
 #[allow(unused_imports)]
 use entities::{Config, Entity, Version};
 
+pub static DEFAULT_DB_LOCATION: &'static str = "db.sqlite";
+
 static DB_IS_FILE: bool = true;
 
 /// returns db connection (either temporary in memory or in file)
 /// determined by bool constant (mostly for development)
-fn get_db() -> Connection {
+fn get_db(db: &str) -> Connection {
     match DB_IS_FILE {
-        true => Connection::open("rusty-sqlite.db").expect("Could not open db"),
+        true => Connection::open(db).expect("Could not open db"),
         false => Connection::open_in_memory().unwrap(),
     }
 }
 
 /// initializes tables of database
-pub fn init_db() -> Result<()> {
-    let db = get_db();
+pub fn init_db(db: &str) -> Result<()> {
+    let db = get_db(db);
     Config::table(&db)?;
     Version::table(&db)?;
     Ok(())
 }
 
 /// delete config by its id
-pub fn delete_by_id(id: u64) -> std::io::Result<()> {
-    let db = get_db();
+pub fn delete_by_id(db: &str, id: u64) -> std::io::Result<()> {
+    let db = get_db(db);
     Config::delete(&db, "id", &id.to_string(), "=").expect("Delete by id failed");
     Ok(())
 }
 
 /// delete config by its full path
-pub fn delete_by_path(path: &str) -> std::io::Result<()> {
-    let db = get_db();
+pub fn delete_by_path(db: &str, path: &str) -> std::io::Result<()> {
+    let db = get_db(db);
     Config::delete(&db, "path", &format!("\"{}\"", path), "=").expect("Delete by path failed");
     Ok(())
 }
 
 /// delete config by its name (last token separated by slash)
-pub fn delete_by_name(name: &str) -> std::io::Result<()> {
-    let db = get_db();
+pub fn delete_by_name(db: &str, name: &str) -> std::io::Result<()> {
+    let db = get_db(db);
     Config::delete(&db, "path", &format!("'%{}'", name), " LIKE ").expect("Delete by name failed");
     Ok(())
 }
 
 /// adds new config to database
-pub fn add(path: &str, version: &str) -> std::io::Result<()> {
-    let db = get_db();
+pub fn add(db: &str, path: &str, version: &str) -> std::io::Result<()> {
+    let db = get_db(db);
     let file_lines = fs::read_to_string(path).expect("could not read file in db");
     let new_id: i32 = Config::next_id(&db).expect("could not fetch next id");
 
@@ -72,8 +74,8 @@ pub fn add(path: &str, version: &str) -> std::io::Result<()> {
 
 /// db => real files
 /// Writes into files from database
-pub fn write_all() -> std::io::Result<()> {
-    let db = get_db();
+pub fn write_all(db: &str) -> std::io::Result<()> {
+    let db = get_db(db);
     let configs: Vec<Config> = fetch_configs(&db).expect("could not fetch data");
     println!("db => real file contents:");
     for config in configs {
@@ -88,8 +90,8 @@ pub fn write_all() -> std::io::Result<()> {
 
 /// real files => db
 /// Reads actual file contents and updates their data in database
-pub fn read_all() -> Result<()> {
-    let db = get_db();
+pub fn read_all(db: &str) -> Result<()> {
+    let db = get_db(db);
     let configs: Vec<Config> = fetch_configs(&db).expect("could not fetch data");
     println!("Real file data => db:");
     for config in configs {
@@ -101,7 +103,7 @@ pub fn read_all() -> Result<()> {
 }
 
 /// lists line separated list of versions stored in db
-pub fn list_versions() -> Result<()> {
+pub fn list_versions(db: &str) -> Result<()> {
     println!("listing versions");
     Ok(())
 }
@@ -130,8 +132,8 @@ fn tree_item(index: usize, total_len: usize, shift_len: usize, item: &str) -> St
 }
 
 /// lists line separated list of configs stored in db
-pub fn list_configs() -> Result<()> {
-    let db = get_db();
+pub fn list_configs(db: &str) -> Result<()> {
+    let db = get_db(db);
     let configs: Vec<Config> = fetch_configs(&db).expect("could not fetch data");
     if configs.len() == 0 {
         println!("No configs in db");
@@ -180,7 +182,7 @@ fn fetch_configs(db: &Connection) -> Result<Vec<Config>> {
 /// testing config entity, create and fetch
 #[test]
 fn config_entity() -> Result<()> {
-    let db = get_db();
+    let db = get_db(DEFAULT_DB_LOCATION);
 
     Config::table(&db)?;
     let test_config = Config {
@@ -215,7 +217,7 @@ fn config_entity() -> Result<()> {
 /// testing version entity, create and fetch
 #[test]
 fn version_entity() -> Result<()> {
-    let db = get_db();
+    let db = get_db(DEFAULT_DB_LOCATION);
 
     Version::table(&db)?;
     let test_version = Version {
