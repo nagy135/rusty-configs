@@ -3,7 +3,7 @@ use clap::{crate_authors, crate_version, App, Arg};
 
 mod lib;
 
-static COMMANDS: &'static [&str] = &["read", "write", "delete", "add", "list"];
+static COMMANDS: &'static [&str] = &["read", "write", "delete", "add", "list", "update"];
 
 fn main() {
     let matches = App::new("Rusty Configs")
@@ -83,6 +83,13 @@ fn main() {
                         panic!("You need either -i(--id) or -p(--path) for this command to work")
                     }
                 },
+            },
+        },
+        "update" => match matches.value_of("path") {
+            Some(path) => lib::update_config(db, path),
+            None => match matches.value_of("config-version") {
+                Some(config_version) => lib::update_version(db, config_version),
+                None => println!("You must either specify -p(--path) or -v(--config-version"),
             },
         },
         "init" => {

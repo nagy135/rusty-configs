@@ -30,6 +30,15 @@ pub fn init_db(db: &str) -> Result<()> {
     Ok(())
 }
 
+/// updates path location of config (match by old one)
+pub fn update_config(db: &str, path: &str) -> Result<()> {
+    Ok(())
+}
+/// updates name of version (match by old name)
+pub fn update_version(db: &str, name: &str) -> Result<()> {
+    Ok(())
+}
+
 /// delete config by its id
 pub fn delete_by_id(db: &str, id: u64) -> std::io::Result<()> {
     let db = get_db(db);
