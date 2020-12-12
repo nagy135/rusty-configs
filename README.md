@@ -1,4 +1,7 @@
 # rusty-configs
+
+![](https://tokei.rs/b1/github/nagy135/rusty-configs?category=code)
+
 Manages configs across multiple devices using shared sqlite db file.
 Syncs configs to a sqlite one-file-database, holding multiple versions
 with option to update system's files (as well as update database versions).
