@@ -1,4 +1,4 @@
-use rusqlite::{Connection, Result};
+use rusqlite::{Connection, Error, Result};
 use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
@@ -31,11 +31,38 @@ pub fn init_db(db: &str) -> Result<()> {
 }
 
 /// updates path location of config (match by old one)
-pub fn update_config(db: &str, path: &str) -> Result<()> {
+pub fn update_config(db: &str, path: &str, version: &str, new_value: &str) -> std::io::Result<()> {
+    let db = get_db(db);
+    let version: Vec<Version> = Version::select_where(&db, &format!("name='{}'", version))
+        .expect("could not select version");
+    if version.len() == 0 {
+        panic!("No version with given name exists");
+    }
+    let matched_configs: Vec<Config> = Config::select_where(
+        &db,
+        &format!("path='{}' AND version_id={}", path, version[0].id),
+    )
+    .expect("Could not select any configs with condition");
+    if matched_configs.len() == 0 {
+        panic!("No config with given criteria exists");
+    }
+
+    let options = ["path", "version"];
+    let splitted: Vec<&str> = new_value.split("=").collect();
+    let column = splitted[0];
+    let value = splitted[1];
+
+    if !options.contains(&column) {
+        panic!("Unknown column to update, options: path, version");
+    }
+    for config in matched_configs {
+        Config::update(&db, config.id, column, value).expect("config update failed");
+    }
+    println!("Config {} update successfull", column);
     Ok(())
 }
 /// updates name of version (match by old name)
-pub fn update_version(db: &str, name: &str) -> Result<()> {
+pub fn update_version(db: &str, name: &str, new_name: &str) -> Result<()> {
     Ok(())
 }
 

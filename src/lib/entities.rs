@@ -38,6 +38,29 @@ pub trait Entity<'a> {
         Self::select(db, Self::columns(), f)
     }
 
+    /// returns vectors of all entities matching condition
+    fn select_where(db: &Connection, condition: &str) -> Result<Vec<Self>>
+    where
+        Self: Sized;
+
+    /// fetches fields of entity passed in query matching where clause and returns Vec<Self>
+    fn _select_where<F>(db: &Connection, condition: &str, f: F) -> Result<Vec<Self>>
+    where
+        F: FnMut(&Row<'_>) -> Result<Self>,
+        Self: Sized,
+    {
+        let mut stmt = db.prepare(&format!(
+            "SELECT {} FROM {} WHERE {}",
+            Self::columns(),
+            Self::table_name(),
+            condition
+        ))?;
+        let results = stmt.query_map(NO_PARAMS, f)?;
+
+        let rows: Vec<Self> = results.into_iter().map(|e| e.unwrap()).collect();
+        Ok(rows)
+    }
+
     /// return entity instance by its id (general part)
     fn find(db: &Connection, id: i32) -> Result<Self>
     where
@@ -188,6 +211,25 @@ impl<'a> Entity<'a> for Config {
             })
         })
     }
+    /// returns vector of entities matching query (use exact sql query here)
+    fn select_where(db: &Connection, condition: &str) -> Result<Vec<Self>>
+    where
+        Self: Sized,
+    {
+        Self::_select_where(db, condition, |row| {
+            let data: String = row.get(2)?;
+            Ok(Config {
+                id: row.get(0)?,
+                path: row.get(1)?,
+                data: data
+                    .split('\n')
+                    .into_iter()
+                    .map(|x| x.to_string())
+                    .collect(),
+                version_id: row.get(3)?,
+            })
+        })
+    }
     /// return entity instance by its id
     fn find(db: &Connection, id: i32) -> Result<Self>
     where
@@ -237,6 +279,19 @@ impl<'a> Entity<'a> for Version {
         Self: Sized,
     {
         Self::_all(db, |row| {
+            Ok(Version {
+                id: row.get(0)?,
+                name: row.get(1)?,
+            })
+        })
+    }
+
+    /// returns vector of entities matching query (use exact sql query here)
+    fn select_where(db: &Connection, condition: &str) -> Result<Vec<Self>>
+    where
+        Self: Sized,
+    {
+        Self::_select_where(db, condition, |row| {
             Ok(Version {
                 id: row.get(0)?,
                 name: row.get(1)?,

@@ -21,6 +21,11 @@ fn main() {
                 .index(2),
         )
         .arg(
+            Arg::with_name("new-value")
+                .help("New value for updating of config or version attributes")
+                .index(3),
+        )
+        .arg(
             Arg::with_name("path")
                 .long("path")
                 .short("p")
@@ -80,17 +85,33 @@ fn main() {
                 None => match matches.value_of("name") {
                     Some(name) => lib::delete_by_name(db, name).expect("delete by name failed"),
                     None => {
-                        panic!("You need either -i(--id) or -p(--path) for this command to work")
+                        println!("You need either -i(--id) or -p(--path) for this command to work")
                     }
                 },
             },
         },
-        "update" => match matches.value_of("path") {
-            Some(path) => lib::update_config(db, path),
-            None => match matches.value_of("config-version") {
-                Some(config_version) => lib::update_version(db, config_version),
-                None => println!("You must either specify -p(--path) or -v(--config-version"),
+        "update" => match matches.value_of("entity") {
+            Some("version") => match matches.value_of("config-version") {
+                Some(config_version) => match matches.value_of("new-value") {
+                    Some(new_value) => lib::update_version(db, config_version, new_value)
+                        .expect("update of version failed"),
+                    None => println!( "You need to specify updated value for entity (next positional argument)"),
+                },
+                None => println!("You need to specify version you wanna update"),
             },
+            Some("config") => match matches.value_of("path") {
+                Some(path) => match matches.value_of("config-version") {
+                    Some(config_version) => match matches.value_of("new-value") {
+                        Some(new_value) => lib::update_config(db, path, config_version, new_value).expect("could not update config"),
+                    None => println!( "You need to specify updated value for entity (next positional argument)"),
+                    },
+                    None => println!("You need to specify config version -v(--config-version) to match desired config")
+                }
+                None => println!("You need to specify old path to match our config")    
+            },
+            Some(_) | None => println!(
+                "You need to specify what you wanna update as a second argument (version/config)"
+            ),
         },
         "init" => {
             lib::init_db(db).expect("fail init db");
@@ -113,6 +134,5 @@ fn main() {
             },
         },
         _ => println!("unknown command!\noptions: {}", COMMANDS.join(", ")),
-        // _ => lib::read_all(db).expect("read failed"),
     }
 }
