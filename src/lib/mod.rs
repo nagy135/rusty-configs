@@ -55,8 +55,18 @@ pub fn update_config(db: &str, path: &str, version: &str, new_value: &str) -> st
     if !options.contains(&column) {
         panic!("Unknown column to update, options: path, version");
     }
-    for config in matched_configs {
-        Config::update(&db, config.id, column, value).expect("config update failed");
+    if column == "version" {
+        let version: Vec<Version> = Version::select_where(&db, &format!("name='{}'", value))
+            .expect("could not select version");
+        let version_value: String = version[0].id.to_string();
+        for config in matched_configs {
+            Config::update(&db, config.id, "version_id", &version_value)
+                .expect("config version update failed");
+        }
+    } else {
+        for config in matched_configs {
+            Config::update(&db, config.id, column, value).expect("config path update failed");
+        }
     }
     println!("Config {} update successfull", column);
     Ok(())
