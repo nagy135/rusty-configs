@@ -130,8 +130,7 @@ pub trait Entity<'a> {
     fn table(db: &'a Connection) -> Result<()> {
         db.execute(
             &format!(
-                "{} {} {}",
-                "CREATE TABLE IF NOT EXISTS",
+                "CREATE TABLE IF NOT EXISTS {} {}",
                 Self::table_name(),
                 Self::types()
             ),
@@ -146,13 +145,7 @@ pub trait Entity<'a> {
         F: FnMut(&Row<'_>) -> Result<Self>,
         Self: Sized,
     {
-        let mut stmt = db.prepare(&format!(
-            "{} {} {} {}",
-            "SELECT",
-            query,
-            "FROM",
-            Self::table_name()
-        ))?;
+        let mut stmt = db.prepare(&format!("SELECT {} FROM {}", query, Self::table_name()))?;
         let results = stmt.query_map(NO_PARAMS, f)?;
 
         let rows: Vec<Self> = results.into_iter().map(|e| e.unwrap()).collect();
