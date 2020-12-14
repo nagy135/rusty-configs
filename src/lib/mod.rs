@@ -1,4 +1,4 @@
-use rusqlite::{Connection, Error, Result};
+use rusqlite::{Connection, Result};
 use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
@@ -73,6 +73,16 @@ pub fn update_config(db: &str, path: &str, version: &str, new_value: &str) -> st
 }
 /// updates name of version (match by old name)
 pub fn update_version(db: &str, name: &str, new_name: &str) -> Result<()> {
+    let db = get_db(db);
+    let versions: Vec<Version> =
+        Version::select_where(&db, &format!("name='{}'", name)).expect("could not select version");
+    if versions.len() == 0 {
+        panic!("No version matches criteria");
+    }
+    for version in versions {
+        Version::update(&db, version.id, "name", &new_name)?
+    }
+    println!("Version name updated {} => {}", name, new_name);
     Ok(())
 }
 
