@@ -113,9 +113,15 @@ pub fn add_config(db: &str, path: &str, version: &str) -> std::io::Result<()> {
     let file_lines = fs::read_to_string(path).expect("could not read file in db");
     let new_id: i32 = Config::next_id(&db).expect("could not fetch next id");
 
+    let versions: Vec<Version> = Version::select_where(&db, &format!("name='{}'", version))
+        .expect("could not select version");
+    if versions.len() == 0 {
+        panic!("No version matches criteria");
+    }
+
     let new_config = Config {
         id: new_id,
-        version_id: version.parse::<i32>().unwrap(),
+        version_id: versions[0].id,
         path: path.to_string(),
         data: file_lines
             .split("\n")

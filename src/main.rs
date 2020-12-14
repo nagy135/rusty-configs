@@ -123,7 +123,7 @@ fn main() {
                     lib::add_config(db, path, config_version).expect("add config failed");
                     println!("File added successfully");
                 }
-                None => println!("You need to specify version with -g(--config-version)"),
+                None => println!("You need to specify version with -v(--config-version)"),
             },
             None => match matches.value_of("config-version") {
                 Some(config_version) => {
