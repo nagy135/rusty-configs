@@ -71,8 +71,8 @@ fn main() {
         "read" => lib::read_all(db).expect("read failed"),
         "write" => lib::write_all(db).expect("write failed"),
         "list" => match matches.value_of("entity") {
-            Some("version") => lib::list_versions(db).expect("listing of versions failed"),
-            Some("config") => lib::list_configs(db).expect("listing of configs failed"),
+            Some("version") | Some("versions") => lib::list_versions(db).expect("listing of versions failed"),
+            Some("config") | Some("configs") => lib::list_configs(db).expect("listing of configs failed"),
             Some(_) | None => println!(
                 "You need to specify what you wanna list as a second argument (version/config)"
             ),

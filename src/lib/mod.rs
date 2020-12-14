@@ -175,7 +175,11 @@ pub fn read_all(db: &str) -> Result<()> {
 
 /// lists line separated list of versions stored in db
 pub fn list_versions(db: &str) -> Result<()> {
-    let _db = get_db(db);
+    let db = get_db(db);
+    let versions: Vec<Version> = Version::all(&db)?;
+    for version in versions {
+        println!("{}. {}", version.id, version.name);
+    }
     Ok(())
 }
 
