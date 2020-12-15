@@ -189,6 +189,29 @@ pub fn list_versions(db: &str) -> Result<()> {
     Ok(())
 }
 
+/// list version and its configs
+pub fn list_version(db: &str, name: &str) -> Result<()> {
+    let db = get_db(db);
+    let versions: Vec<Version> =
+        Version::select_where(&db, &format!("name='{}'", name)).expect("could not select version");
+    if versions.len() == 0 {
+        panic!("No version matches criteria");
+    }
+    let version: &Version = &versions[0];
+    let configs: Vec<Config> = Config::select_where(&db, &format!("version_id='{}'", version.id))
+        .expect("could not select configs by version id");
+
+    println!("{}", version.name);
+    for (i, config) in configs.iter().enumerate() {
+        println!(
+            "{}",
+            tree_item(i, configs.len(), version.name.len() + 1, &config.path)
+        );
+    }
+
+    Ok(())
+}
+
 /// prints line of tree list
 fn tree_item(index: usize, total_len: usize, shift_len: usize, item: &str) -> String {
     let mut tree_branch = "├──";
