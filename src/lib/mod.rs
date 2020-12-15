@@ -86,6 +86,24 @@ pub fn update_version(db: &str, name: &str, new_name: &str) -> Result<()> {
     Ok(())
 }
 
+/// delete version by its name
+pub fn delete_version(db: &str, name: &str) -> std::io::Result<()> {
+    let db = get_db(db);
+    let versions: Vec<Version> =
+        Version::select_where(&db, &format!("name='{}'", name)).expect("could not select version");
+    if versions.len() == 0 {
+        panic!("No version matches criteria");
+    }
+    let version: &Version = &versions[0];
+    let configs: Vec<Config> = Config::select_where(&db, &format!("version_id={}", version.id))
+        .expect("could not select configs");
+    for config in configs {
+        Config::delete(&db, "id", &config.id.to_string(), "=").expect("Delete by id failed");
+    }
+    Version::delete(&db, "id", &version.id.to_string(), "=").expect("Delete by id failed");
+    Ok(())
+}
+
 /// delete config by its id
 pub fn delete_by_id(db: &str, id: u64) -> std::io::Result<()> {
     let db = get_db(db);

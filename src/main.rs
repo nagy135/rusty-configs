@@ -80,18 +80,27 @@ fn main() {
                 "You need to specify what you wanna list as a second argument (version/config)"
             ),
         },
-        "delete" => match matches.value_of("id") {
-            Some(id) => lib::delete_by_id(db, id.parse::<u64>().expect("could not parse id"))
-                .expect("delete by id failed"),
-            None => match matches.value_of("path") {
-                Some(path) => lib::delete_by_path(db, path).expect("delete by path failed"),
-                None => match matches.value_of("name") {
-                    Some(name) => lib::delete_by_name(db, name).expect("delete by name failed"),
-                    None => {
-                        println!("You need either -i(--id) or -p(--path) for this command to work")
-                    }
-                },
+        "delete" => match matches.value_of("entity") {
+            Some("version") | Some("versions") => match matches.value_of("config-version") {
+                Some(value) => lib::delete_version(db, value).expect("delete version failed"),
+                None => println!("You need to specify version name by -v(--config-version)"),
             },
+            Some("config") | Some("configs") => match matches.value_of("id"){
+                Some(id) => lib::delete_by_id(db, id.parse::<u64>().expect("could not parse id"))
+                    .expect("delete by id failed"),
+                None => match matches.value_of("path") {
+                    Some(path) => lib::delete_by_path(db, path).expect("delete by path failed"),
+                    None => match matches.value_of("name") {
+                        Some(name) => lib::delete_by_name(db, name).expect("delete by name failed"),
+                        None => {
+                            println!("You need either -i(--id) or -p(--path) for this command to work")
+                        }
+                    },
+                },
+            }
+            Some(_) | None => println!(
+                "list / config (you need to specify entity to delete)"
+            ),
         },
         "update" => match matches.value_of("entity") {
             Some("version") => match matches.value_of("config-version") {
@@ -106,14 +115,14 @@ fn main() {
                 Some(path) => match matches.value_of("config-version") {
                     Some(config_version) => match matches.value_of("value") {
                         Some(new_value) => lib::update_config(db, path, config_version, new_value).expect("could not update config"),
-                    None => println!( "You need to specify updated value for entity (next positional argument)"),
+                        None => println!( "You need to specify updated value for entity (next positional argument)"),
                     },
                     None => println!("You need to specify config version -v(--config-version) to match desired config")
                 }
                 None => println!("You need to specify old path to match our config")    
             },
             Some(_) | None => println!(
-                "You need to specify what you wanna update as a second argument (version/config)"
+                "list / config (you need to specify entity to update)"
             ),
         },
         "init" => {

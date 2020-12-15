@@ -114,13 +114,6 @@ pub trait Entity<'a> {
 
     /// delete entity from db
     fn delete(db: &'a Connection, parameter: &str, value: &str, operator: &str) -> Result<()> {
-        println!(
-            "DELETE FROM {} WHERE {}{}{}",
-            Self::table_name(),
-            parameter,
-            operator,
-            value
-        );
         db.execute(
             &format!(
                 "DELETE FROM {} WHERE {}{}{}",
