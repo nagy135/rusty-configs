@@ -43,6 +43,4 @@ Uses sqlite database with trivial model structure
 * rust
 
 # TODO
-* list versions
-* update version
 * minimize duplicity in entities.rs
