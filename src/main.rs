@@ -99,7 +99,7 @@ fn main() {
                 },
             }
             Some(_) | None => println!(
-                "list / config (you need to specify entity to delete)"
+                "version / config (you need to specify entity to delete)"
             ),
         },
         "update" => match matches.value_of("entity") {
@@ -142,7 +142,7 @@ fn main() {
                     lib::add_version(db, config_version).expect("add version failed");
                     println!("Version added successfully");
                 }
-                None => println!("You need to specify path with -p(--path)"),
+                None => println!("You need to specify path with -p(--path) to add config or -v(--config-version) to add version"),
             },
         },
         "help" | _ => println!("unknown command!\noptions: {}", COMMANDS.join(", ")),
