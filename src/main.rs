@@ -3,7 +3,7 @@ use clap::{crate_authors, crate_version, App, Arg};
 
 mod lib;
 
-static COMMANDS: &'static [&str] = &["read", "write", "delete", "add", "list", "update"];
+static COMMANDS: &'static [&str] = &["init", "read", "write", "delete", "add", "list", "update"];
 
 fn main() {
     let matches = App::new("Rusty Configs")
