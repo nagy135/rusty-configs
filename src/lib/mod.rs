@@ -1,3 +1,7 @@
+extern crate base64;
+
+use base64::encode;
+
 use rusqlite::{Connection, Result};
 use std::collections::HashMap;
 use std::fs;
@@ -190,9 +194,9 @@ pub fn read_all(db: &str) -> Result<()> {
     let configs: Vec<Config> = fetch_configs(&db).expect("could not fetch data");
     println!("Real file data => db:");
     for config in configs {
-        println!("{}", config.path);
         let new_data = fs::read_to_string(config.path).expect("could not read file in db");
-        Config::update(&db, config.id, "data", &new_data)?
+        let encoded = encode(new_data);
+        Config::update(&db, config.id, "data", &encoded)?
     }
     Ok(())
 }

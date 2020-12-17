@@ -1,3 +1,6 @@
+extern crate base64;
+
+use base64::{decode, encode};
 use rusqlite::{Connection, Result, Row, NO_PARAMS};
 
 /// Entity representing config stored in db
@@ -195,7 +198,7 @@ impl<'a> Entity<'a> for Config {
             Ok(Config {
                 id: row.get(0)?,
                 path: row.get(1)?,
-                data: data
+                data: decode_lines(data)
                     .split('\n')
                     .into_iter()
                     .map(|x| x.to_string())
@@ -214,7 +217,7 @@ impl<'a> Entity<'a> for Config {
             Ok(Config {
                 id: row.get(0)?,
                 path: row.get(1)?,
-                data: data
+                data: decode_lines(data)
                     .split('\n')
                     .into_iter()
                     .map(|x| x.to_string())
@@ -233,7 +236,7 @@ impl<'a> Entity<'a> for Config {
             Ok(Config {
                 id: row.get(0)?,
                 path: row.get(1)?,
-                data: data
+                data: decode_lines(data)
                     .split('\n')
                     .into_iter()
                     .map(|x| x.to_string())
@@ -248,7 +251,7 @@ impl<'a> Entity<'a> for Config {
             "{}, '{}', '{}', {}",
             self.id,
             self.path,
-            self.data.join("\n"),
+            encode(self.data.join("\n")),
             self.version_id
         )
     }
@@ -307,4 +310,10 @@ impl<'a> Entity<'a> for Version {
     fn values(&self) -> String {
         format!("{}, '{}'", self.id, self.name)
     }
+}
+
+fn decode_lines(encoded_lines: String) -> String {
+    let decoded_lines = decode(encoded_lines).expect("base64 decode failed");
+    let string_lines = std::str::from_utf8(&decoded_lines).expect("utf8 -> str conversion failed");
+    string_lines.to_string()
 }
