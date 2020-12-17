@@ -312,6 +312,7 @@ impl<'a> Entity<'a> for Version {
     }
 }
 
+/// helper method decoding lines from base64 back to newline separated lines
 fn decode_lines(encoded_lines: String) -> String {
     let decoded_lines = decode(encoded_lines).expect("base64 decode failed");
     let string_lines = std::str::from_utf8(&decoded_lines).expect("utf8 -> str conversion failed");

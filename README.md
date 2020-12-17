@@ -5,6 +5,7 @@
 Manages configs across multiple devices using shared sqlite db file.
 Syncs configs to a sqlite one-file-database, holding multiple versions
 with option to update system's files (as well as update database versions).
+Encodes data with base64 to database to retain all the symbols after file recovery.
 
 # dependecies
 * rustc
