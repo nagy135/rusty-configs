@@ -32,6 +32,11 @@ pub trait Entity<'a> {
     where
         Self: Sized;
 
+    /// builds instance of Entity
+    fn builder() -> Box<dyn FnMut(&Row<'_>) -> Result<Self>>
+    where
+        Self: Sized;
+
     /// returns vector of all entities (general part)
     fn _all<F>(db: &Connection, f: F) -> Result<Vec<Self>>
     where
@@ -193,57 +198,21 @@ impl<'a> Entity<'a> for Config {
     where
         Self: Sized,
     {
-        Self::_all(db, |row| {
-            let data: String = row.get(2)?;
-            Ok(Config {
-                id: row.get(0)?,
-                path: row.get(1)?,
-                data: decode_lines(data)
-                    .split('\n')
-                    .into_iter()
-                    .map(|x| x.to_string())
-                    .collect(),
-                version_id: row.get(3)?,
-            })
-        })
+        Self::_all(db, Self::builder())
     }
     /// returns vector of entities matching query (use exact sql query here)
     fn select_where(db: &Connection, condition: &str) -> Result<Vec<Self>>
     where
         Self: Sized,
     {
-        Self::_select_where(db, condition, |row| {
-            let data: String = row.get(2)?;
-            Ok(Config {
-                id: row.get(0)?,
-                path: row.get(1)?,
-                data: decode_lines(data)
-                    .split('\n')
-                    .into_iter()
-                    .map(|x| x.to_string())
-                    .collect(),
-                version_id: row.get(3)?,
-            })
-        })
+        Self::_select_where(db, condition, Self::builder())
     }
     /// return entity instance by its id
     fn find(db: &Connection, id: i32) -> Result<Self>
     where
         Self: Sized,
     {
-        Self::_find(db, id, |row| {
-            let data: String = row.get(2)?;
-            Ok(Config {
-                id: row.get(0)?,
-                path: row.get(1)?,
-                data: decode_lines(data)
-                    .split('\n')
-                    .into_iter()
-                    .map(|x| x.to_string())
-                    .collect(),
-                version_id: row.get(3)?,
-            })
-        })
+        Self::_find(db, id, Self::builder())
     }
 
     fn values(&self) -> String {
@@ -254,6 +223,22 @@ impl<'a> Entity<'a> for Config {
             encode(self.data.join("\n")),
             self.version_id
         )
+    }
+    /// builds instance of Config
+    fn builder() -> Box<dyn FnMut(&Row<'_>) -> Result<Self>> {
+        Box::new(|row: &Row| {
+            let data: String = row.get(2)?;
+            Ok(Config {
+                id: row.get(0)?,
+                path: row.get(1)?,
+                data: decode_lines(data)
+                    .split('\n')
+                    .into_iter()
+                    .map(|x| x.to_string())
+                    .collect(),
+                version_id: row.get(3)?,
+            })
+        })
     }
 }
 
@@ -274,12 +259,7 @@ impl<'a> Entity<'a> for Version {
     where
         Self: Sized,
     {
-        Self::_all(db, |row| {
-            Ok(Version {
-                id: row.get(0)?,
-                name: row.get(1)?,
-            })
-        })
+        Self::_all(db, Self::builder())
     }
 
     /// returns vector of entities matching query (use exact sql query here)
@@ -287,12 +267,7 @@ impl<'a> Entity<'a> for Version {
     where
         Self: Sized,
     {
-        Self::_select_where(db, condition, |row| {
-            Ok(Version {
-                id: row.get(0)?,
-                name: row.get(1)?,
-            })
-        })
+        Self::_select_where(db, condition, Self::builder())
     }
 
     /// return entity instance by its id
@@ -300,15 +275,19 @@ impl<'a> Entity<'a> for Version {
     where
         Self: Sized,
     {
-        Self::_find(db, id, |row| {
+        Self::_find(db, id, Self::builder())
+    }
+    fn values(&self) -> String {
+        format!("{}, '{}'", self.id, self.name)
+    }
+    /// builds instance of Version
+    fn builder() -> Box<dyn FnMut(&Row<'_>) -> Result<Self>> {
+        Box::new(|row: &Row| {
             Ok(Version {
                 id: row.get(0)?,
                 name: row.get(1)?,
             })
         })
-    }
-    fn values(&self) -> String {
-        format!("{}, '{}'", self.id, self.name)
     }
 }
 
