@@ -107,6 +107,5 @@ Uses sqlite database with trivial model structure
 # TODO
 * minimize duplicity in entities.rs
 * read parameter to refresh only specific version
-* panic when special characters are in file, probably different db type
 * missing prints after running command
 * install process
