@@ -103,7 +103,7 @@ fn main() {
             ),
         },
         "update" => match matches.value_of("entity") {
-            Some("version") => match matches.value_of("config-version") {
+            Some("version") | Some("versions") => match matches.value_of("config-version") {
                 Some(config_version) => match matches.value_of("value") {
                     Some(new_value) => lib::update_version(db, config_version, new_value)
                         .expect("update of version failed"),
@@ -111,7 +111,7 @@ fn main() {
                 },
                 None => println!("You need to specify version you wanna update"),
             },
-            Some("config") => match matches.value_of("path") {
+            Some("config") | Some("configs") => match matches.value_of("path") {
                 Some(path) => match matches.value_of("config-version") {
                     Some(config_version) => match matches.value_of("value") {
                         Some(new_value) => lib::update_config(db, path, config_version, new_value).expect("could not update config"),
@@ -122,28 +122,28 @@ fn main() {
                 None => println!("You need to specify old path to match our config")    
             },
             Some(_) | None => println!(
-                "list / config (you need to specify entity to update)"
+                "version / config (you need to specify entity to update)"
             ),
         },
         "init" => {
             lib::init_db(db).expect("fail init db");
             println!("db initialized");
         }
-        "add" => match matches.value_of("path") {
-            Some(path) => match matches.value_of("config-version") {
-                Some(config_version) => {
-                    lib::add_config(db, path, config_version).expect("add config failed");
-                    println!("File added successfully");
-                }
-                None => println!("You need to specify version with -v(--config-version)"),
+        "add" => match matches.value_of("entity") {
+            Some("config") | Some("configs") => match matches.value_of("path") {
+                Some(path) => match matches.value_of("config-version") {
+                    Some(config_version) => lib::add_config(db, path, config_version).expect("add config failed"),
+                    None => println!("You need to specify version with -v(--config-version)"),
+                },
+                None => println!("You need to specify path to config file -p(--path)")
             },
-            None => match matches.value_of("config-version") {
-                Some(config_version) => {
-                    lib::add_version(db, config_version).expect("add version failed");
-                    println!("Version added successfully");
-                }
-                None => println!("You need to specify path with -p(--path) to add config or -v(--config-version) to add version"),
+            Some("version") | Some("versions") => match matches.value_of("config-version") {
+                Some(config_version) => lib::add_version(db, config_version).expect("add version failed"),
+                None => println!("You need to specify -v(--config-version) with a name of new version")
             },
+            Some(_) | None => println!(
+                "version / config (you need to specify entity to add)"
+            ),
         },
         "help" | _ => println!("unknown command!\noptions: {}", COMMANDS.join(", ")),
     }
