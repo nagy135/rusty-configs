@@ -105,7 +105,6 @@ Uses sqlite database with trivial model structure
 * rust
 
 # TODO
-* minimize duplicity in entities.rs
 * read parameter to refresh only specific version
 * missing prints after running command
 * install process
