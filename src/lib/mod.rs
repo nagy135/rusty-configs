@@ -153,6 +153,7 @@ pub fn add_config(db: &str, path: &str, version: &str) -> std::io::Result<()> {
     new_config
         .create(&db)
         .expect("could not create config in db");
+    println!("Config record in database created");
     Ok(())
 }
 
@@ -168,6 +169,7 @@ pub fn add_version(db: &str, name: &str) -> std::io::Result<()> {
     new_version
         .create(&db)
         .expect("could not create version in db");
+    println!("Version record in database created");
     Ok(())
 }
 
@@ -184,6 +186,7 @@ pub fn write_all(db: &str) -> std::io::Result<()> {
             file.write(format!("{}\n", line).as_bytes())?;
         }
     }
+    println!("All files written to your system tree");
     Ok(())
 }
 
@@ -198,6 +201,7 @@ pub fn read_all(db: &str) -> Result<()> {
         let encoded = encode(new_data);
         Config::update(&db, config.id, "data", &encoded)?
     }
+    println!("All config contents refreshed in db");
     Ok(())
 }
 
