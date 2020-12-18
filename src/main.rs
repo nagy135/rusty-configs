@@ -126,8 +126,7 @@ fn main() {
             ),
         },
         "init" => {
-            lib::init_db(db).expect("fail init db");
-            println!("db initialized");
+            lib::init_db(db).expect("fail init db")
         }
         "add" => match matches.value_of("entity") {
             Some("config") | Some("configs") => match matches.value_of("path") {

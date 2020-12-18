@@ -31,6 +31,7 @@ pub fn init_db(db: &str) -> Result<()> {
     let db = get_db(db);
     Config::table(&db)?;
     Version::table(&db)?;
+    println!("Db initialized with tables specified");
     Ok(())
 }
 
