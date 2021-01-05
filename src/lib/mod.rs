@@ -184,7 +184,7 @@ pub fn write_all(db: &str) -> std::io::Result<()> {
         println!("{}", config.path);
         let mut file = File::create(config.path)?;
         for line in config.data {
-            file.write(format!("{}\n", line).as_bytes())?;
+            file.write_all(format!("{}\n", line).as_bytes())?;
         }
     }
     println!("All files written to your system tree");
