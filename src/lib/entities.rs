@@ -27,34 +27,22 @@ pub trait Entity<'a> {
     /// columns representing fields of entity, for create (statically defined)
     fn columns() -> &'static str;
 
-    /// returns vector of all entities
-    fn all(db: &Connection) -> Result<Vec<Self>>
-    where
-        Self: Sized;
-
     /// builds instance of Entity
     fn builder() -> Box<dyn FnMut(&Row<'_>) -> Result<Self>>
     where
         Self: Sized;
 
-    /// returns vector of all entities (general part)
-    fn _all<F>(db: &Connection, f: F) -> Result<Vec<Self>>
+    /// returns vector of all entities
+    fn all(db: &Connection) -> Result<Vec<Self>>
     where
         Self: Sized,
-        F: FnMut(&Row<'_>) -> Result<Self>,
     {
-        Self::select(db, Self::columns(), f)
+        Self::select(db, Self::columns(), Self::builder())
     }
 
-    /// returns vectors of all entities matching condition
+    /// fetches fields of entity passed in query matching where clause and returns Vec<Self>
     fn select_where(db: &Connection, condition: &str) -> Result<Vec<Self>>
     where
-        Self: Sized;
-
-    /// fetches fields of entity passed in query matching where clause and returns Vec<Self>
-    fn _select_where<F>(db: &Connection, condition: &str, f: F) -> Result<Vec<Self>>
-    where
-        F: FnMut(&Row<'_>) -> Result<Self>,
         Self: Sized,
     {
         let mut stmt = db.prepare(&format!(
@@ -63,7 +51,7 @@ pub trait Entity<'a> {
             Self::table_name(),
             condition
         ))?;
-        let results = stmt.query_map(NO_PARAMS, f)?;
+        let results = stmt.query_map(NO_PARAMS, Self::builder())?;
 
         let rows: Vec<Self> = results.into_iter().map(|e| e.unwrap()).collect();
         Ok(rows)
@@ -72,11 +60,7 @@ pub trait Entity<'a> {
     /// return entity instance by its id (general part)
     fn find(db: &Connection, id: i32) -> Result<Self>
     where
-        Self: Sized;
-    fn _find<F>(db: &Connection, id: i32, f: F) -> Result<Self>
-    where
         Self: Sized,
-        F: FnMut(&Row<'_>) -> Result<Self>,
     {
         let mut stmt = db.prepare(&format!(
             "SELECT {} FROM {} WHERE id={}",
@@ -84,7 +68,7 @@ pub trait Entity<'a> {
             Self::table_name(),
             id
         ))?;
-        stmt.query_row(NO_PARAMS, f)
+        stmt.query_row(NO_PARAMS, Self::builder())
     }
 
     fn next_id(db: &'a Connection) -> Result<i32> {
@@ -194,27 +178,6 @@ impl<'a> Entity<'a> for Config {
         "id, path, data, version_id"
     }
 
-    fn all(db: &Connection) -> Result<Vec<Self>>
-    where
-        Self: Sized,
-    {
-        Self::_all(db, Self::builder())
-    }
-    /// returns vector of entities matching query (use exact sql query here)
-    fn select_where(db: &Connection, condition: &str) -> Result<Vec<Self>>
-    where
-        Self: Sized,
-    {
-        Self::_select_where(db, condition, Self::builder())
-    }
-    /// return entity instance by its id
-    fn find(db: &Connection, id: i32) -> Result<Self>
-    where
-        Self: Sized,
-    {
-        Self::_find(db, id, Self::builder())
-    }
-
     fn values(&self) -> String {
         format!(
             "{}, '{}', '{}', {}",
@@ -255,28 +218,6 @@ impl<'a> Entity<'a> for Version {
         name TEXT NOT NULL)"
     }
 
-    fn all(db: &Connection) -> Result<Vec<Self>>
-    where
-        Self: Sized,
-    {
-        Self::_all(db, Self::builder())
-    }
-
-    /// returns vector of entities matching query (use exact sql query here)
-    fn select_where(db: &Connection, condition: &str) -> Result<Vec<Self>>
-    where
-        Self: Sized,
-    {
-        Self::_select_where(db, condition, Self::builder())
-    }
-
-    /// return entity instance by its id
-    fn find(db: &Connection, id: i32) -> Result<Self>
-    where
-        Self: Sized,
-    {
-        Self::_find(db, id, Self::builder())
-    }
     fn values(&self) -> String {
         format!("{}, '{}'", self.id, self.name)
     }
